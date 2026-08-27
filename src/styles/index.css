@@ -1,3 +1,68 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+
+@keyframes fadeInHint {
+  from {
+    opacity: 0;
+    transform: translateY(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Minimal Tap Tooltip Style */
+.knoxite-tap-popover.driver-popover {
+  background: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25) !important;
+  padding: 12px 16px !important;
+  max-width: 280px !important;
+}
+
+.knoxite-tap-popover .driver-popover-title {
+  font-size: 0.8825rem !important;
+  font-weight: 500 !important;
+  line-height: 1.35 !important;
+  color: #1e293b !important;
+  margin-bottom: 4px !important;
+}
+
+.knoxite-tap-popover .driver-popover-description {
+  font-size: 0.7125rem !important;
+  color: #334155 !important;
+  font-weight: 500 !important;
+  line-height: 1.4 !important;
+  margin: 0 !important;
+  opacity: 0;
+  animation: fadeInHint 0.3s ease-out 0.3s forwards !important;
+}
+
+.knoxite-tap-popover .driver-popover-footer {
+  display: none !important;
+}
+
+/* Pulsing Spotlight Animation */
+@keyframes driverPulseGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(59, 130, 246, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+}
+
+.knoxite-tap-popover .driver-popover-close-btn {
+  display: none !important;
+}
+
+.driver-active-element {
+  animation: driverPulseGlow 1.8s infinite ease-in-out !important;
+  border-radius: 8px !important;
+  cursor: pointer !important;
+}

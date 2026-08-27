@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/app/components/ui/dialog";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
+import { useOnboardingTour } from '../utils/useOnboardingTour';
 import {
   Bell, User, Trophy, LayoutGrid, Loader2,
   X, BookOpen, Star, ArrowRight, Zap, Search, CheckCircle2,
@@ -21,7 +22,8 @@ export default function DashboardPage() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasNewNotifications, setHasNewNotifications] = useState(false); // 🚀 ADDED NEW STATE
+  const [hasNewNotifications, setHasNewNotifications] = useState(false); 
+  const { startTour } = useOnboardingTour();
 
   // Modal State
   const [selectedMatch, setSelectedMatch] = useState<any | null>(null);
@@ -29,12 +31,24 @@ export default function DashboardPage() {
   const [isRequesting, setIsRequesting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
+
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
     setCurrentUserId(user.id);
     setUserRole(user.role);
     fetchDashboardData();
   }, []);
+
+
+
+  useEffect(() => {
+  const timer = setTimeout(() => {
+    startTour();
+  }, 500);
+
+  return () => clearTimeout(timer);
+}, []);
+
 
   const fetchDashboardData = async () => {
     try {
@@ -148,19 +162,41 @@ export default function DashboardPage() {
             </Button>
           )}
 
-          <Button variant="ghost" size="icon" onClick={() => navigate("/chat")} className="text-blue-600">
-            <MessageSquare className="size-5" />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => navigate("/requests")} className="relative">
-            <Bell className="text-blue-600" />
-            {/* 🚀 CONDITIONAL RED DOT */}
-            {hasNewNotifications && (
-              <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
-            )}
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => navigate("/profile")}>
-            <User className="text-blue-600" />
-          </Button>
+          <div id="tour-nav-messages">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => 
+              navigate("/chat")} 
+              className="text-blue-600">
+              <MessageSquare className="size-5" />
+            </Button>
+          </div>
+          
+          <div id="tour-nav-notifications">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => 
+              navigate("/requests")} 
+              className="relative">
+              <Bell className="text-blue-600" />
+              {/*  CONDITIONAL RED DOT */}
+              {hasNewNotifications && (
+                <span className="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white"></span>
+              )}
+            </Button>
+          </div>
+
+          <div id="tour-nav-profile">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => 
+              navigate("/profile")}>
+              <User className="text-blue-600" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -175,24 +211,54 @@ export default function DashboardPage() {
                 </Button>
               )}
 
-              <Button
-                variant="ghost"
-                className="w-full justify-start gap-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900"
-                onClick={() => navigate("/community-forum")}
-              >
-                <MessageSquare className="size-5" />
-                Community Forum
-              </Button>
+              <div id="tour-community-forum" className="w-full">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start gap-3 text-blue-700 hover:bg-blue-50 hover:text-blue-900"
+                  onClick={() => navigate("/community-forum")}
+                >
+                  <MessageSquare className="size-5" />
+                  Community Forum
+                </Button>
+              </div>
 
-              <Button variant="ghost" className="justify-start text-blue-900 font-bold hover:bg-blue-50" onClick={() => navigate("/knox-hub")}>
-                <LayoutGrid className="mr-3 size-5 text-blue-500" /> KnoxHub
-              </Button>
-              <Button variant="ghost" className="justify-start text-blue-900 font-bold hover:bg-blue-50" onClick={() => navigate("/leaderboard")}>
-                <Trophy className="mr-3 size-5 text-yellow-500" /> Leaderboard
-              </Button>
-              <Button variant="ghost" className="justify-start text-blue-900 font-bold hover:bg-blue-50" onClick={() => navigate("/my-skills")}>
-                <BookOpen className="mr-3 size-5 text-emerald-500" /> My Skills
-              </Button>
+              <div id="tour-knoxhub" className="w-full">
+                <Button 
+                  id="tour-knoxhub"
+                  variant="ghost" 
+                  className="w-full justify-start text-blue-900 font-bold hover:bg-blue-50" 
+                  onClick={() => navigate("/knox-hub")}
+                >
+                  <LayoutGrid className="mr-3 size-5 text-blue-500" /> 
+                  KnoxHub
+
+                </Button>
+              </div>
+
+              <div id="tour-leaderboard" className="w-full">
+                <Button 
+                  id="tour-leaderboard"
+                  variant="ghost" 
+                  className="w-full justify-start text-blue-900 font-bold hover:bg-blue-50" 
+                  onClick={() => navigate("/leaderboard")}
+                >
+                  <Trophy className="mr-3 size-5 text-yellow-500" /> 
+                  Leaderboard
+                </Button>
+              </div>
+              
+              <div id="tour-my-skills" className="w-full">
+                <Button 
+                  id="tour-my-skills"
+                  variant="ghost" 
+                  className="w-full justify-start text-blue-900 font-bold hover:bg-blue-50" 
+                  onClick={() => navigate("/my-skills")}
+                >
+                  <BookOpen className="mr-3 size-5 text-emerald-500" /> 
+                  My Skills
+                </Button>
+              </div>
+
             </CardContent>
           </Card>
         </aside>
