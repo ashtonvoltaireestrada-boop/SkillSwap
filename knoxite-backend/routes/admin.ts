@@ -28,7 +28,7 @@ router.get("/dashboard-data", async (req, res) => {
         name: true,
         email: true,
         role: true,
-        avatarUrl: true // 🚀 ADDED THIS LINE!
+        avatarUrl: true // ADDED THIS LINE!
       }
     });
 

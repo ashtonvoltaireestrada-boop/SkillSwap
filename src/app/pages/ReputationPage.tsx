@@ -31,7 +31,7 @@ export default function ReputationPage() {
 
       if (res.ok) {
         alert("Evaluation Submitted! Points added to peer.");
-        navigate("/leaderboard"); // 🚀 Redirect to see the live update
+        navigate("/leaderboard"); // Redirect to see the live update
       }
     } catch (err) {
       console.error(err);

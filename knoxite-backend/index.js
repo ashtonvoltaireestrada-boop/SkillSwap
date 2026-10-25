@@ -18,7 +18,7 @@ const app = (0, express_1.default)();
 const prisma = new client_1.PrismaClient();
 const PORT = process.env.PORT || 5000;
 app.use((0, cors_1.default)());
-// 🚀 INCREASE PAYLOAD LIMIT for base64 images
+// INCREASE PAYLOAD LIMIT for base64 images
 app.use(express_1.default.json({ limit: '10mb' }));
 // --- THE BULLETPROOF PROFILE UPDATE BYPASS ---
 // Placed at the root level to guarantee route registration
@@ -69,7 +69,7 @@ app.get("/api/leaderboard", authMiddleware_1.authenticateToken, async (req, res)
             return {
                 id: user.id,
                 name: user.name,
-                avatarUrl: user.avatarUrl, // 🚀 ADDED AVATAR
+                avatarUrl: user.avatarUrl, //ADDED AVATAR
                 skills: user.offeredSkills.map(s => s.name).join(", ") || "Member",
                 rating: avgRating.toFixed(1),
                 reviews: totalReviews,
@@ -96,7 +96,7 @@ app.get("/api/leaderboard/swaps", authMiddleware_1.authenticateToken, async (req
             return {
                 id: user.id,
                 name: user.name,
-                avatarUrl: user.avatarUrl, // 🚀 ADDED AVATAR
+                avatarUrl: user.avatarUrl, // ADDED AVATAR
                 totalSwaps: totalSwaps
             };
         }).sort((a, b) => b.totalSwaps - a.totalSwaps);
@@ -197,7 +197,7 @@ app.get("/api/swap-requests", authMiddleware_1.authenticateToken, async (req, re
                 ]
             },
             include: {
-                // 🚀 ADDED AVATAR
+                // ADDED AVATAR
                 requester: { select: { id: true, name: true, avatarUrl: true } },
                 receiver: { select: { id: true, name: true, avatarUrl: true } },
                 offeredSkill: { select: { name: true } },
@@ -246,7 +246,7 @@ app.get("/api/swaps", authMiddleware_1.authenticateToken, async (req, res) => {
         const swaps = await prisma.swap.findMany({
             where: { OR: [{ requesterId: userId }, { receiverId: userId }] },
             include: {
-                // 🚀 ADDED AVATAR
+                // ADDED AVATAR
                 requester: { select: { id: true, name: true, avatarUrl: true } },
                 receiver: { select: { id: true, name: true, avatarUrl: true } },
                 offeredSkill: { select: { name: true } },
@@ -399,7 +399,7 @@ app.use((err, req, res, next) => {
     res.status(500).send('Something broke!');
 });
 const server = app.listen(Number(PORT), '0.0.0.0', () => {
-    console.log(`🚀 Knoxite Server Live on Port ${PORT}`);
+    console.log(`Knoxite Server Live on Port ${PORT}`);
 });
 server.on('error', (error) => {
     if (error.code === 'EADDRINUSE') {

@@ -1,4 +1,4 @@
-## 🚀 Guidelines to Run the Program Locally
+## Guidelines to Run the Program Locally
 
 ### 1. Backend Setup
 Open your terminal and navigate to the backend folder:

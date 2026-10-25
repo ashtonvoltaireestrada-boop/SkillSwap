@@ -10,7 +10,7 @@ const router = express_1.default.Router();
 const prisma = new client_1.PrismaClient();
 // Send a message
 router.post("/send", authMiddleware_1.authenticateToken, async (req, res) => {
-    const { receiverId, content, swapId } = req.body; // 🚀 Added swapId
+    const { receiverId, content, swapId } = req.body; // Added swapId
     const myId = req.userId;
     if (!swapId) {
         return res.status(400).json({ error: "Swap ID is required to link this message." });
@@ -21,7 +21,7 @@ router.post("/send", authMiddleware_1.authenticateToken, async (req, res) => {
                 content,
                 senderId: myId,
                 receiverId,
-                swapId, // 🚀 Now storing the specific swap instance
+                swapId, // Now storing the specific swap instance
             },
         });
         res.json(message);
@@ -35,14 +35,14 @@ router.post("/send", authMiddleware_1.authenticateToken, async (req, res) => {
 router.get("/conversation/:partnerId", authMiddleware_1.authenticateToken, async (req, res) => {
     const partnerId = req.params.partnerId;
     const myId = req.userId;
-    const { swapId } = req.query; // 🚀 Get swapId from the URL query parameters
+    const { swapId } = req.query; // Get swapId from the URL query parameters
     if (!swapId) {
         return res.status(400).json({ error: "Swap ID query parameter is required." });
     }
     try {
         const messages = await prisma.message.findMany({
             where: {
-                swapId: swapId, // 🚀 CRITICAL: Filters history by this specific rotation only
+                swapId: swapId, // CRITICAL: Filters history by this specific rotation only
                 OR: [
                     { senderId: myId, receiverId: partnerId },
                     { senderId: partnerId, receiverId: myId },

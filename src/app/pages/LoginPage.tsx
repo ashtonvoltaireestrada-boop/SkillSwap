@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
@@ -13,6 +13,10 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    document.documentElement.classList.remove("dark");
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -23,7 +27,7 @@ export default function LoginPage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "bypass-tunnel-reminder": "true"
+          "bypass-tunnel-reminder": "true",
         },
         body: JSON.stringify({ email, password }),
       });
@@ -37,10 +41,23 @@ export default function LoginPage() {
       // Save the token for API authorization
       localStorage.setItem("knoxite_token", data.token);
 
-      // SAVE USER DATA: This now includes 'role' from the backend response
+      // SAVE USER DATA: includes 'role' from backend response
       localStorage.setItem("knoxite_user", JSON.stringify(data.user));
 
-      navigate("/dashboard");
+      // Read ONLY this specific user's saved theme preference
+      const userTheme = localStorage.getItem(`theme_${data.user.id}`);
+      if (userTheme === "dark") {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
+
+      // Role-based routing redirect
+      if (data.user?.role === "ADMIN") {
+        navigate("/admin-dashboard");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err: any) {
       setError(err.message);
     } finally {

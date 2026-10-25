@@ -1,14 +1,25 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/app/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
-import { Badge } from "@/app/components/ui/badge";
 import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/app/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/app/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
-import { ArrowLeft, BookOpen, Plus, Trash2, Code, Music, Palette, Globe, Utensils, TrendingUp, Loader2, Search } from "lucide-react";
+import { ArrowLeft, Trash2, Loader2 } from "lucide-react";
 import { API_BASE_URL } from "@/config";
 
 export default function MySkillsPage() {
@@ -20,6 +31,7 @@ export default function MySkillsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [newSkillName, setNewSkillName] = useState("");
   const [newSkillCategory, setNewSkillCategory] = useState("technology");
+  const [activeTab, setActiveTab] = useState<"offered" | "wanted">("offered");
 
   useEffect(() => {
     fetchMySkills();
@@ -28,9 +40,15 @@ export default function MySkillsPage() {
   const fetchMySkills = async () => {
     try {
       const token = localStorage.getItem("knoxite_token");
-      if (!token) { navigate("/login"); return; }
+      if (!token) {
+        navigate("/login");
+        return;
+      }
       const response = await fetch(`${API_BASE_URL}/profile`, {
-        headers: { "Authorization": `Bearer ${token}`, "bypass-tunnel-reminder": "true" }
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "bypass-tunnel-reminder": "true",
+        },
       });
       const data = await response.json();
       if (response.ok) {
@@ -49,22 +67,23 @@ export default function MySkillsPage() {
     if (!newSkillName.trim()) return;
     try {
       const token = localStorage.getItem("knoxite_token");
-      const endpoint = skillType === "offer" 
-        ? `${API_BASE_URL}/profile/skills/offer`
-        : `${API_BASE_URL}/profile/skills/want`;
+      const endpoint =
+        skillType === "offer"
+          ? `${API_BASE_URL}/profile/skills/offer`
+          : `${API_BASE_URL}/profile/skills/want`;
 
       const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "bypass-tunnel-reminder": "true"
+          Authorization: `Bearer ${token}`,
+          "bypass-tunnel-reminder": "true",
         },
-        body: JSON.stringify({ name: newSkillName, category: newSkillCategory })
+        body: JSON.stringify({ name: newSkillName, category: newSkillCategory }),
       });
 
       if (response.ok) {
-        fetchMySkills(); 
+        fetchMySkills();
         setIsAddSkillOpen(false);
         setNewSkillName("");
       }
@@ -79,7 +98,10 @@ export default function MySkillsPage() {
       const token = localStorage.getItem("knoxite_token");
       const response = await fetch(`${API_BASE_URL}/profile/skills/${type}/${id}`, {
         method: "DELETE",
-        headers: { "Authorization": `Bearer ${token}`, "bypass-tunnel-reminder": "true" }
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "bypass-tunnel-reminder": "true",
+        },
       });
       if (response.ok) fetchMySkills();
     } catch (error) {
@@ -88,138 +110,226 @@ export default function MySkillsPage() {
   };
 
   const categories = [
-    { value: "technology", label: "Technology", icon: Code },
-    { value: "creative", label: "Creative", icon: Palette },
-    { value: "music", label: "Music", icon: Music },
-    { value: "language", label: "Language", icon: Globe },
-    { value: "lifestyle", label: "Lifestyle", icon: Utensils },
-    { value: "business", label: "Business", icon: TrendingUp },
+    { value: "technology", label: "Technology" },
+    { value: "creative", label: "Creative" },
+    { value: "music", label: "Music" },
+    { value: "language", label: "Language" },
+    { value: "lifestyle", label: "Lifestyle" },
+    { value: "business", label: "Business" },
   ];
 
-  // --- REUSABLE FORMATTED EMPTY STATE ---
-  const renderEmptyState = (message: string) => (
-    <Card className="col-span-full bg-white/90 backdrop-blur border-blue-100 shadow-sm py-16">
-      <CardContent className="flex flex-col items-center justify-center text-center">
-        <div className="p-4 bg-blue-50 rounded-full mb-4">
-          <BookOpen className="size-10 text-blue-300" />
-        </div>
-        <span className="text-lg md:text-xl font-bold text-blue-900 block">
-          {message}
-        </span>
-        <span className="text-sm text-blue-500 mt-2 block">
-          Add skills to your profile to find better matches!
-        </span>
-        <Button 
-          onClick={() => setIsAddSkillOpen(true)}
-          variant="outline" 
-          size="sm"
-          className="mt-6 border-blue-200 text-blue-600 hover:bg-blue-50"
-        >
-          <Plus className="mr-2 size-4" />
-          <span>Add Your First Skill</span>
-        </Button>
-      </CardContent>
-    </Card>
+  const renderEmptyState = (message: string, defaultType: "offer" | "want") => (
+    <div className="col-span-full py-16 px-6 text-center rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/70 dark:bg-slate-900/50 space-y-3">
+      <p className="text-base font-black text-slate-900 dark:text-white">{message}</p>
+      <p className="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto">
+        Add skills to your matrix so KnoxHub can pair you with compatible peers.
+      </p>
+      <Button
+        onClick={() => {
+          setSkillType(defaultType);
+          setIsAddSkillOpen(true);
+        }}
+        variant="outline"
+        size="sm"
+        className="mt-2 rounded-xl text-xs font-bold border-slate-200 dark:border-slate-700 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800"
+      >
+        Add Your First Skill
+      </Button>
+    </div>
   );
 
   if (isLoading) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-screen bg-blue-50">
-        <Loader2 className="animate-spin size-10 text-blue-600 mb-4" />
-        <span className="text-blue-900 font-bold">Loading your profile...</span>
+      <div className="flex flex-col justify-center items-center min-h-screen bg-[#F8FAFC] dark:bg-slate-950">
+        <Loader2 className="animate-spin size-8 text-blue-600 mb-3" />
+        <span className="text-slate-900 dark:text-slate-200 font-bold text-xs uppercase tracking-widest">
+          Loading Skill Matrix...
+        </span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100">
-      <header className="bg-white border-b border-blue-100 shadow-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")} className="text-blue-600">
-              <ArrowLeft className="size-6" />
+    <div className="min-h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col relative overflow-x-hidden transition-colors duration-200">
+      {/* SUBTLE ARCHITECTURAL GRID */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b50_1px,transparent_1px),linear-gradient(to_bottom,#1e293b50_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none" />
+
+      {/* 1. FLOATING GLASS HEADER */}
+      <div className="sticky top-4 z-30 px-4 sm:px-6">
+        <header className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-5 py-3.5 rounded-2xl bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/dashboard")}
+              className="size-9 rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 transition-colors shrink-0"
+              title="Back to Dashboard"
+            >
+              <ArrowLeft className="size-5" />
             </Button>
-            <h1 className="text-xl font-bold text-blue-900">My Skills</h1>
+
+            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
+
+            <div
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2.5 cursor-pointer"
+            >
+              <div className="size-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-600/25">
+                K
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                  My Skills
+                </span>
+              </div>
+            </div>
           </div>
-          
+
           <Dialog open={isAddSkillOpen} onOpenChange={setIsAddSkillOpen}>
-            <DialogTrigger asChild>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 h-10 font-bold shadow-lg shadow-blue-100">
-                <Plus className="size-4 mr-2" /> Add
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-[95vw] sm:max-w-md rounded-2xl">
-              <DialogHeader>
-                <DialogTitle className="text-blue-900 text-xl">Add New Skill</DialogTitle>
-                <DialogDescription>Expand your trading profile to get better matches.</DialogDescription>
+            <DialogContent className="max-w-[95vw] sm:max-w-md rounded-3xl p-6 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+              <DialogHeader className="space-y-1">
+                <DialogTitle className="text-xl font-black text-slate-900 dark:text-white">
+                  Add New Skill
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500 dark:text-slate-400">
+                  Expand your trading matrix to get better matches.
+                </DialogDescription>
               </DialogHeader>
-              
-              <form className="space-y-4 mt-4" onSubmit={handleAddSkill}>
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold text-blue-900">Type</Label>
-                  <Select value={skillType} onValueChange={(val: any) => setSkillType(val)}>
-                    <SelectTrigger className="border-blue-100 h-11">
+
+              <form className="space-y-4 mt-2" onSubmit={handleAddSkill}>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    Exchange Direction
+                  </Label>
+                  <Select
+                    value={skillType}
+                    onValueChange={(val: any) => setSkillType(val)}
+                  >
+                    <SelectTrigger className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 h-11 rounded-xl text-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="offer">Teach/Offer a skill</SelectItem>
-                      <SelectItem value="want">Learn/Request a skill</SelectItem>
+                    <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
+                      <SelectItem value="offer">Teaches (Offer a skill)</SelectItem>
+                      <SelectItem value="want">Wants to Learn (Request a skill)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold text-blue-900">Skill Name</Label>
-                  <Input 
-                    placeholder="e.g., UI Design, Spanish..." 
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    Skill Name
+                  </Label>
+                  <Input
+                    placeholder="e.g., UI Design, SQL, Python..."
                     value={newSkillName}
                     onChange={(e) => setNewSkillName(e.target.value)}
                     required
-                    className="border-blue-100 h-11" 
+                    className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 h-11 rounded-xl text-sm focus-visible:ring-blue-600"
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label className="text-sm font-bold text-blue-900">Category</Label>
-                  <Select value={newSkillCategory} onValueChange={setNewSkillCategory}>
-                    <SelectTrigger className="border-blue-100 h-11">
+
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    Domain Category
+                  </Label>
+                  <Select
+                    value={newSkillCategory}
+                    onValueChange={setNewSkillCategory}
+                  >
+                    <SelectTrigger className="border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 h-11 rounded-xl text-sm">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100">
                       {categories.map((cat) => (
-                        <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                        <SelectItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 h-12 font-bold text-white mt-4">
+
+                <Button
+                  type="submit"
+                  className="w-full bg-blue-600 hover:bg-blue-700 h-11 font-bold text-xs text-white rounded-xl shadow-md shadow-blue-600/20 mt-2"
+                >
                   Save Skill
                 </Button>
               </form>
             </DialogContent>
           </Dialog>
-        </div>
-      </header>
+        </header>
+      </div>
 
-      <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-8">
-        <Tabs defaultValue="offered" className="space-y-8">
-          <TabsList className="grid w-full grid-cols-2 bg-white border border-blue-100 h-12 p-1 rounded-xl shadow-sm">
-            <TabsTrigger value="offered" className="rounded-lg font-bold text-sm md:text-base data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Teaching
+      {/* 2. MAIN CONTENT */}
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 pt-8 pb-20 space-y-6 relative z-10">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              My Skills
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              Manage the topics you can mentor others in and the subjects you want to learn in return.
+            </p>
+          </div>
+
+          <Button
+            onClick={() => setIsAddSkillOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs h-10 px-5 self-start sm:self-auto shrink-0 shadow-md shadow-blue-600/20 transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-lg hover:shadow-blue-600/30 active:translate-y-0 active:scale-95"
+          >
+            + Add Skill
+          </Button>
+        </div>
+
+        {/* BOUND TABS STATE */}
+        <Tabs
+          value={activeTab}
+          onValueChange={(val: any) => setActiveTab(val)}
+          className="space-y-6"
+        >
+          <TabsList className="grid w-full max-w-md grid-cols-2 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 h-12 p-1 rounded-2xl shadow-xs">
+            <TabsTrigger
+              value="offered"
+              style={{
+                backgroundColor: activeTab === "offered" ? "#2563EB" : "transparent",
+                color: activeTab === "offered" ? "#ffffff" : undefined,
+              }}
+              className={`rounded-xl font-bold text-xs sm:text-sm transition-all border-0 ring-0 outline-none ${
+                activeTab === "offered"
+                  ? "text-white"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              Teaches ({offeredSkills.length})
             </TabsTrigger>
-            <TabsTrigger value="wanted" className="rounded-lg font-bold text-sm md:text-base data-[state=active]:bg-blue-600 data-[state=active]:text-white">
-              Learning
+
+            <TabsTrigger
+              value="wanted"
+              style={{
+                backgroundColor: activeTab === "wanted" ? "#059669" : "transparent",
+                color: activeTab === "wanted" ? "#ffffff" : undefined,
+              }}
+              className={`rounded-xl font-bold text-xs sm:text-sm transition-all border-0 ring-0 outline-none ${
+                activeTab === "wanted"
+                  ? "text-white"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              Wants to Learn ({wantedSkills.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="offered" className="mt-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {offeredSkills.length === 0 ? (
-                renderEmptyState("You haven't added anything to teach yet.")
+                renderEmptyState("You haven't added any skills to teach yet.", "offer")
               ) : (
                 offeredSkills.map((skill) => (
-                  <SkillCard 
-                    key={skill.id} 
-                    skill={skill} 
-                    onDelete={() => handleDeleteSkill(skill.id, "offer")} 
+                  <SkillCard
+                    key={skill.id}
+                    skill={skill}
+                    variant="blue"
+                    onDelete={() => handleDeleteSkill(skill.id, "offer")}
                   />
                 ))
               )}
@@ -229,47 +339,74 @@ export default function MySkillsPage() {
           <TabsContent value="wanted" className="mt-0">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {wantedSkills.length === 0 ? (
-                renderEmptyState("What would you like to learn?")
+                renderEmptyState("What skill would you like to learn next?", "want")
               ) : (
                 wantedSkills.map((skill) => (
-                  <SkillCard 
-                    key={skill.id} 
-                    skill={skill} 
-                    variant="green"
-                    onDelete={() => handleDeleteSkill(skill.id, "want")} 
+                  <SkillCard
+                    key={skill.id}
+                    skill={skill}
+                    variant="emerald"
+                    onDelete={() => handleDeleteSkill(skill.id, "want")}
                   />
                 ))
               )}
             </div>
           </TabsContent>
         </Tabs>
-      </div>
+      </main>
     </div>
   );
 }
 
-function SkillCard({ skill, onDelete, variant = "blue" }: { skill: any, onDelete: () => void, variant?: "blue" | "green" }) {
-  const colorClass = variant === "blue" ? "text-blue-600 bg-blue-50 border-blue-100" : "text-emerald-600 bg-emerald-50 border-emerald-100";
+function SkillCard({
+  skill,
+  onDelete,
+  variant = "blue",
+}: {
+  skill: any;
+  onDelete: () => void;
+  variant?: "blue" | "emerald";
+}) {
+  const isBlue = variant === "blue";
+
   return (
-    <Card className="bg-white/90 backdrop-blur border-blue-100 shadow-sm hover:shadow-md transition-all group">
-      <CardHeader className="p-5 flex flex-row items-center justify-between space-y-0">
-        <div className="min-w-0">
-          <span className="text-lg font-bold text-blue-900 capitalize block truncate leading-tight">
-            {skill.name}
+    <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs hover:shadow-md hover:border-slate-300 dark:hover:border-slate-700 transition-all flex items-center justify-between gap-4">
+      <div className="min-w-0 space-y-2">
+        <div className="flex items-center gap-2">
+          <span
+            className={`size-2 rounded-full ${
+              isBlue ? "bg-blue-600" : "bg-emerald-500"
+            }`}
+          />
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400">
+            {isBlue ? "Teaches" : "Wants to Learn"}
           </span>
-          <Badge className={`mt-2 font-bold text-[10px] uppercase tracking-widest border-2 ${colorClass}`}>
-            {skill.category}
-          </Badge>
         </div>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={onDelete}
-          className="text-gray-300 hover:text-red-500 hover:bg-red-50 transition-all rounded-full"
+
+        <h3 className="text-lg font-black text-slate-900 dark:text-white capitalize truncate">
+          {skill.name}
+        </h3>
+
+        <span
+          className={`inline-block text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-lg border ${
+            isBlue
+              ? "text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 border-blue-200/60 dark:border-blue-800/60"
+              : "text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200/60 dark:border-emerald-800/60"
+          }`}
         >
-          <Trash2 className="size-5" />
-        </Button>
-      </CardHeader>
-    </Card>
+          {skill.category}
+        </span>
+      </div>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onDelete}
+        className="text-slate-300 dark:text-slate-600 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors rounded-xl shrink-0"
+        title="Remove Skill"
+      >
+        <Trash2 className="size-4" />
+      </Button>
+    </div>
   );
 }

@@ -33,7 +33,7 @@ router.get("/", authMiddleware_1.authenticateToken, async (req, res) => {
     try {
         const posts = await prisma.boardPost.findMany({
             include: {
-                author: { select: { name: true, avatarUrl: true } } // 🚀 Fetching Avatar!
+                author: { select: { name: true, avatarUrl: true } } // Fetching Avatar!
             },
             orderBy: { createdAt: "desc" }
         });

@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 
 // Send a message
 router.post("/send", authenticateToken, async (req: AuthRequest, res: any) => {
-  const { receiverId, content, swapId } = req.body; // 🚀 Added swapId
+  const { receiverId, content, swapId } = req.body; // Added swapId
   const myId = req.userId as string;
 
   if (!swapId) {
@@ -20,7 +20,7 @@ router.post("/send", authenticateToken, async (req: AuthRequest, res: any) => {
         content,
         senderId: myId,
         receiverId,
-        swapId, // 🚀 Now storing the specific swap instance
+        swapId, // Now storing the specific swap instance
       },
     });
     res.json(message);
@@ -34,7 +34,7 @@ router.post("/send", authenticateToken, async (req: AuthRequest, res: any) => {
 router.get("/conversation/:partnerId", authenticateToken, async (req: AuthRequest, res: any) => {
   const partnerId = req.params.partnerId as string;
   const myId = req.userId as string;
-  const { swapId } = req.query; // 🚀 Get swapId from the URL query parameters
+  const { swapId } = req.query; // Get swapId from the URL query parameters
 
   if (!swapId) {
     return res.status(400).json({ error: "Swap ID query parameter is required." });
@@ -43,7 +43,7 @@ router.get("/conversation/:partnerId", authenticateToken, async (req: AuthReques
   try {
     const messages = await prisma.message.findMany({
       where: {
-        swapId: swapId as string, // 🚀 CRITICAL: Filters history by this specific rotation only
+        swapId: swapId as string, // CRITICAL: Filters history by this specific rotation only
         OR: [
           { senderId: myId, receiverId: partnerId },
           { senderId: partnerId, receiverId: myId },

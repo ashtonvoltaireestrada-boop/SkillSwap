@@ -1,12 +1,9 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { Button } from "@/app/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
-import { Badge } from "@/app/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs";
-import { ArrowLeft, Star, Zap, Loader2, CheckCircle2, Award } from "lucide-react";
-
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { API_BASE_URL } from "@/config";
 
 export default function LeaderboardPage() {
@@ -21,17 +18,31 @@ export default function LeaderboardPage() {
     const fetchRankings = async () => {
       try {
         const token = localStorage.getItem("knoxite_token");
-        if (!token) { navigate("/"); return; }
+        if (!token) {
+          navigate("/");
+          return;
+        }
 
         const [leaderboardRes, swapsRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/leaderboard`, { headers: { "Authorization": `Bearer ${token}`, "bypass-tunnel-reminder": "true" } }),
-          fetch(`${API_BASE_URL}/leaderboard/swaps`, { headers: { "Authorization": `Bearer ${token}`, "bypass-tunnel-reminder": "true" } })
+          fetch(`${API_BASE_URL}/leaderboard`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "bypass-tunnel-reminder": "true",
+            },
+          }),
+          fetch(`${API_BASE_URL}/leaderboard/swaps`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "bypass-tunnel-reminder": "true",
+            },
+          }),
         ]);
 
         if (leaderboardRes.ok) {
           const data = await leaderboardRes.json();
-          // Sort by rating for the Top Mentors
-          const sortedMentors = [...(data.topMentors || [])].sort((a, b) => b.rating - a.rating);
+          const sortedMentors = [...(data.topMentors || [])].sort(
+            (a, b) => b.rating - a.rating
+          );
           setMentors(sortedMentors);
           setMyStats(data.currentUserStats || null);
         }
@@ -49,162 +60,281 @@ export default function LeaderboardPage() {
   }, [navigate]);
 
   const getRankStyles = (rank: number) => {
-    if (rank === 1) return "bg-amber-100 text-amber-700 border-amber-200";
-    if (rank === 2) return "bg-slate-100 text-slate-700 border-slate-200";
-    if (rank === 3) return "bg-orange-100 text-orange-700 border-orange-200";
-    return "bg-blue-50 text-blue-700 border-blue-100";
+    if (rank === 1)
+      return "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border-amber-200/80 dark:border-amber-800/60";
+    if (rank === 2)
+      return "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700";
+    if (rank === 3)
+      return "bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300 border-orange-200/80 dark:border-orange-800/60";
+    return "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 border-blue-100 dark:border-blue-900/40";
   };
-
-  const getRankIcon = (rank: number) => (
-    <div className={`flex items-center justify-center size-10 shrink-0 rounded-lg font-bold border shadow-sm ${getRankStyles(rank)}`}>
-      {rank}
-    </div>
-  );
 
   if (isLoading) {
     return (
-      <div className="h-screen flex flex-col items-center justify-center bg-slate-50">
-        <Loader2 className="animate-spin size-10 text-blue-600 mb-4" />
-        <p className="text-slate-600 font-semibold tracking-tight">Synchronizing Leaderboard...</p>
+      <div className="h-screen flex flex-col items-center justify-center bg-[#F8FAFC] dark:bg-slate-950">
+        <Loader2 className="animate-spin size-8 text-blue-600 mb-3" />
+        <p className="text-slate-900 dark:text-slate-200 font-bold text-xs uppercase tracking-widest">
+          Synchronizing Leaderboard...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-32 font-sans">
-      <header className="bg-white border-b border-slate-200 p-4 sticky top-0 z-20 shadow-sm">
-        <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <Button variant="outline" size="icon" onClick={() => navigate("/dashboard")} className="rounded-full shrink-0">
-            <ArrowLeft className="size-5 text-slate-600" />
-          </Button>
-          <h1 className="text-xl font-bold text-slate-900 tracking-tight">Knoxite Leaderboard</h1>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col relative overflow-x-hidden transition-colors duration-200">
+      {/* SUBTLE ARCHITECTURAL GRID */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b50_1px,transparent_1px),linear-gradient(to_bottom,#1e293b50_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none" />
 
-      <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-8">
-        <Tabs defaultValue="mentors" onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-2 w-full bg-white border border-slate-200 h-12 p-1 rounded-lg">
-            <TabsTrigger value="mentors" className="rounded-md data-[state=active]:bg-blue-600 data-[state=active]:text-white font-semibold text-sm">
-              <Award className="mr-2 size-4" /> Top Mentors
+      {/* 1. FLOATING GLASS HEADER */}
+      <div className="sticky top-4 z-30 px-4 sm:px-6">
+        <header className="max-w-5xl mx-auto flex items-center justify-between px-4 sm:px-5 py-3.5 rounded-2xl bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/dashboard")}
+              className="size-9 rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 transition-colors shrink-0"
+              title="Back to Dashboard"
+            >
+              <ArrowLeft className="size-5" />
+            </Button>
+
+            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
+
+            <div
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2.5 cursor-pointer"
+            >
+              <div className="size-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-600/25">
+                K
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                  Leaderboard
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
+      </div>
+
+      {/* 2. MAIN CONTENT */}
+      <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 pt-8 space-y-6 relative z-10">
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 block">
+            Merit & Reputation
+          </span>
+          <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+            Knoxite Leaderboard
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
+            Recognize top-rated peer mentors and the most active bilateral swappers on campus.
+          </p>
+        </div>
+
+        <Tabs
+          value={activeTab}
+          onValueChange={(val: any) => setActiveTab(val)}
+          className="space-y-6"
+        >
+          {/* TABS LIST WITH RELIABLE BLUE & EMERALD ACTIVE COLORING */}
+          <TabsList className="grid grid-cols-2 w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 h-12 p-1= rounded-2xl shadow-xs">
+            <TabsTrigger
+              value="mentors"
+              style={{
+                backgroundColor: activeTab === "mentors" ? "#2563EB" : "transparent",
+                color: activeTab === "mentors" ? "#ffffff" : undefined,
+              }}
+              className={`rounded-xl font-bold text-xs sm:text-sm transition-all border-0 ring-0 outline-none shadow-none ${
+                activeTab === "mentors"
+                  ? "text-white shadow-sm"
+                  : "bg-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              Top Mentors
             </TabsTrigger>
-            <TabsTrigger value="swaps" className="rounded-md data-[state=active]:bg-blue-600 data-[state=active]:text-white font-semibold text-sm">
-              <Zap className="mr-2 size-4" /> Most Active
+            <TabsTrigger
+              value="swaps"
+              style={{
+                backgroundColor: activeTab === "swaps" ? "#059669" : "transparent",
+                color: activeTab === "swaps" ? "#ffffff" : undefined,
+              }}
+              className={`rounded-xl font-bold text-xs sm:text-sm transition-all border-0 ring-0 outline-none shadow-none ${
+                activeTab === "swaps"
+                  ? "text-white shadow-sm"
+                  : "bg-transparent text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              }`}
+            >
+              Most Active
             </TabsTrigger>
           </TabsList>
 
-          {/* 🏆 TAB 1: TOP MENTORS (QUALITY) */}
-          <TabsContent value="mentors" className="space-y-4">
-            <Card className="border-slate-200 shadow-sm rounded-xl">
-              <CardHeader>
-                <CardTitle className="text-slate-900 text-lg font-bold">Top Peer Mentors</CardTitle>
-                <CardDescription>Ranked by average 5-star quality rating and verified reviews.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
+          {/* TAB 1: TOP MENTORS */}
+          <TabsContent value="mentors" className="mt-0">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                  Top Peer Mentors
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Ranked by average 5-star quality rating and verified student reviews.
+                </p>
+              </div>
+
+              <div className="space-y-3">
                 {mentors.length === 0 ? (
-                  <p className="text-center text-slate-500 py-8 italic font-medium">No mentors available yet.</p>
+                  <p className="text-center text-slate-400 dark:text-slate-500 py-10 text-xs font-medium">
+                    No mentors ranked yet.
+                  </p>
                 ) : (
                   mentors.map((mentor, index) => (
-                    <div key={mentor.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 rounded-lg bg-white border border-slate-100 hover:border-amber-300 transition-colors">
-                      <div className="flex items-center gap-4 min-w-0">
-                        {getRankIcon(index + 1)}
-                        <div className="relative shrink-0">
-                          <Avatar className="size-12 border-2 border-slate-50 ring-1 ring-slate-200">
-                            <AvatarImage src={mentor.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${mentor.name}`} />
-                            <AvatarFallback className="bg-slate-100 text-slate-600 font-bold">{mentor.name[0]}</AvatarFallback>
-                          </Avatar>
-                          <div className="absolute -bottom-1 -right-1 bg-white rounded-full p-0.5 border border-slate-100">
-                            <CheckCircle2 className="size-4 text-blue-600 fill-white" />
-                          </div>
+                    <div
+                      key={mentor.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-500/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div
+                          className={`flex items-center justify-center size-10 shrink-0 rounded-xl font-black text-xs border ${getRankStyles(
+                            index + 1
+                          )}`}
+                        >
+                          {index + 1}
                         </div>
+
+                        <Avatar className="size-11 rounded-xl ring-1 ring-slate-200 dark:ring-slate-700 shrink-0">
+                          <AvatarImage
+                            src={
+                              mentor.avatarUrl ||
+                              `https://api.dicebear.com/7.x/avataaars/svg?seed=${mentor.name}`
+                            }
+                          />
+                          <AvatarFallback className="bg-blue-600 text-white font-black rounded-xl text-xs">
+                            {mentor.name?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+
                         <div className="min-w-0">
-                          <h3 className="font-bold text-slate-900 text-base truncate">{mentor.name}</h3>
-                          <div className="flex items-center gap-1 mt-0.5">
-                             {[...Array(5)].map((_, i) => (
-                               <Star 
-                                 key={i} 
-                                 className={`size-3.5 ${i < Math.round(mentor.rating || 0) ? "fill-amber-400 text-amber-400" : "fill-slate-100 text-slate-200"}`} 
-                               />
-                             ))}
-                          </div>
+                          <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate">
+                            {mentor.name}
+                          </h3>
+                          <span className="inline-block text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded-md border border-blue-200/60 dark:border-blue-800/60 mt-0.5">
+                            Verified Mentor
+                          </span>
                         </div>
                       </div>
-                      
-                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 w-full sm:w-auto border-t sm:border-none pt-2 sm:pt-0 shrink-0">
+
+                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-1 w-full sm:w-auto border-t border-slate-200/60 dark:border-slate-800 sm:border-none pt-2.5 sm:pt-0 shrink-0">
                         <div className="flex items-baseline gap-1">
-                          <span className="text-2xl font-black text-slate-900">{mentor.rating ? Number(mentor.rating).toFixed(1) : "0.0"}</span>
-                          <span className="text-xs font-bold text-slate-400">/ 5.0</span>
+                          <span className="text-xl font-black text-slate-900 dark:text-white">
+                            {mentor.rating
+                              ? Number(mentor.rating).toFixed(1)
+                              : "0.0"}
+                          </span>
+                          <span className="text-xs font-bold text-slate-400 dark:text-slate-500">
+                            / 5.0
+                          </span>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                          {mentor.reviews || 0} VERIFIED REVIEWS
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                          {mentor.reviews || 0} Verified Reviews
                         </span>
                       </div>
                     </div>
                   ))
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
 
-          {/* ⚡ TAB 2: MOST ACTIVE (VOLUME) */}
-          <TabsContent value="swaps" className="space-y-4 animate-in fade-in slide-in-from-bottom-2">
-            <Card className="border-slate-200 shadow-sm rounded-xl">
-              <CardHeader>
-                <CardTitle className="text-slate-900 text-lg font-bold">Most Active Swappers</CardTitle>
-                <CardDescription>Ranked strictly by the total number of successfully completed skill swaps.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
+          {/* TAB 2: MOST ACTIVE SWAPPERS */}
+          <TabsContent value="swaps" className="mt-0">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
+              <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
+                <h2 className="text-lg font-black text-slate-900 dark:text-white">
+                  Most Active Swappers
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Ranked strictly by the total number of completed bilateral skill swaps.
+                </p>
+              </div>
+
+              <div className="space-y-3">
                 {swappers.length === 0 ? (
-                  <p className="text-center text-slate-500 py-8 italic font-medium">No completed swaps recorded yet.</p>
+                  <p className="text-center text-slate-400 dark:text-slate-500 py-10 text-xs font-medium">
+                    No completed swaps recorded yet.
+                  </p>
                 ) : (
                   swappers.map((swapper, index) => (
-                    <div key={swapper.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 rounded-lg bg-white border border-slate-100 hover:border-emerald-300 transition-colors">
-                      <div className="flex items-center gap-4 min-w-0">
-                        {getRankIcon(index + 1)}
-                        <Avatar className="size-12 shrink-0 border-2 border-slate-50 ring-1 ring-slate-200">
-                          <AvatarImage src={swapper.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${swapper.name}`} />
-                          <AvatarFallback className="bg-emerald-100 text-emerald-700 font-bold">{swapper.name[0]}</AvatarFallback>
+                    <div
+                      key={swapper.id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 rounded-2xl bg-slate-50/70 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-500/50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3.5 min-w-0">
+                        <div
+                          className={`flex items-center justify-center size-10 shrink-0 rounded-xl font-black text-xs border ${getRankStyles(
+                            index + 1
+                          )}`}
+                        >
+                          {index + 1}
+                        </div>
+
+                        <Avatar className="size-11 rounded-xl ring-1 ring-slate-200 dark:ring-slate-700 shrink-0">
+                          <AvatarImage
+                            src={
+                              swapper.avatarUrl ||
+                              `https://api.dicebear.com/7.x/avataaars/svg?seed=${swapper.name}`
+                            }
+                          />
+                          <AvatarFallback className="bg-emerald-600 text-white font-black rounded-xl text-xs">
+                            {swapper.name?.[0]}
+                          </AvatarFallback>
                         </Avatar>
+
                         <div className="min-w-0">
-                          <h3 className="font-bold text-slate-900 text-base truncate">{swapper.name}</h3>
-                          <p className="text-xs font-medium text-slate-500 uppercase tracking-wide truncate">Verified Participant</p>
+                          <h3 className="font-bold text-slate-900 dark:text-white text-sm sm:text-base truncate">
+                            {swapper.name}
+                          </h3>
+                          <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500">
+                            Verified Participant
+                          </span>
                         </div>
                       </div>
-                      
-                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 w-full sm:w-auto border-t sm:border-none pt-2 sm:pt-0 shrink-0">
-                        <Badge variant="secondary" className="bg-emerald-50 text-emerald-700 font-bold px-3 py-1 border-emerald-200 text-sm">
-                          {/* 🚀 FIXED: Checks for standard completedSwaps, Prisma's _count.swaps, or defaults to 0 */}
-                          {swapper.totalSwaps || 0} TOTAL SWAPS
-                        </Badge>
+
+                      <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-2 w-full sm:w-auto border-t border-slate-200/60 dark:border-slate-800 sm:border-none pt-2.5 sm:pt-0 shrink-0">
+                        <span className="inline-block text-xs font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100/80 dark:bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-200/60 dark:border-emerald-800/60">
+                          {swapper.totalSwaps || 0} Total Swaps
+                        </span>
                       </div>
                     </div>
                   ))
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </TabsContent>
-
         </Tabs>
-      </div>
+      </main>
 
-      {/* Persistent User Performance Bar */}
+      {/* 3. PERSISTENT USER PERFORMANCE BAR */}
       {myStats && (
-        <div className="fixed bottom-0 left-0 right-0 p-4 bg-white border-t border-slate-200 shadow-[0_-4px_10px_rgba(0,0,0,0.05)] z-30">
-          <div className="max-w-4xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-900 p-4 rounded-xl text-white gap-4">
-             <div className="flex items-center gap-4">
-                <div className="bg-blue-600 text-white size-10 shrink-0 rounded-lg flex items-center justify-center font-bold">
-                   #{mentors.findIndex(u => u.id === myStats.id) + 1 || '?'}
-                </div>
-                <div className="min-w-0">
-                   <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Current Academic Standing</p>
-                   <p className="font-bold text-base truncate">{myStats.name} (Authorized User)</p>
-                </div>
-             </div>
-             <div className="text-left sm:text-right shrink-0">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-0.5">Performance Status</p>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-none font-bold">
-                   Verified
-                </Badge>
-             </div>
+        <div className="fixed bottom-4 left-0 right-0 px-4 sm:px-6 z-30 pointer-events-none">
+          <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between bg-slate-900/95 dark:bg-slate-900 backdrop-blur p-4 sm:px-6 rounded-2xl text-white gap-4 shadow-xl border border-slate-800 pointer-events-auto">
+            <div className="flex items-center gap-3.5">
+              <div className="bg-blue-600 text-white size-10 shrink-0 rounded-xl flex items-center justify-center font-black text-xs shadow-sm">
+                #{mentors.findIndex((u) => u.id === myStats.id) + 1 || "?"}
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                  Your Standing
+                </p>
+                <p className="font-bold text-sm sm:text-base truncate">
+                  {myStats.name}
+                </p>
+              </div>
+            </div>
+            <div className="text-left sm:text-right shrink-0">
+              <span className="inline-block text-[11px] font-bold text-emerald-400 bg-emerald-500/15 border border-emerald-500/30 px-2.5 py-0.5 rounded-lg">
+                Verified Account
+              </span>
+            </div>
           </div>
         </div>
       )}

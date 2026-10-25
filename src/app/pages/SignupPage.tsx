@@ -5,6 +5,7 @@ import { Input } from "@/app/components/ui/input";
 import { Label } from "@/app/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/ui/card";
 import { Loader2, Eye, EyeOff, UserPlus } from "lucide-react";
+import { useEffect } from "react";
 
 // 1. IMPORT YOUR CONFIG
 import { API_BASE_URL } from "@/config";
@@ -20,6 +21,11 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+
+  useEffect(() => {
+    document.documentElement.classList.remove("dark");
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

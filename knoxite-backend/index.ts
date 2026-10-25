@@ -16,7 +16,7 @@ const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
 app.use(cors());
-// 🚀 INCREASE PAYLOAD LIMIT for base64 images
+// INCREASE PAYLOAD LIMIT for base64 images
 app.use(express.json({ limit: '10mb' }));
 
 // --- THE BULLETPROOF PROFILE UPDATE BYPASS ---
@@ -73,7 +73,7 @@ app.get("/api/leaderboard", authenticateToken, async (req, res) => {
       return {
         id: user.id,
         name: user.name,
-        avatarUrl: user.avatarUrl, // 🚀 ADDED AVATAR
+        avatarUrl: user.avatarUrl, // ADDED AVATAR
         skills: user.offeredSkills.map(s => s.name).join(", ") || "Member",
         rating: avgRating.toFixed(1),
         reviews: totalReviews,
@@ -102,7 +102,7 @@ app.get("/api/leaderboard/swaps", authenticateToken, async (req, res) => {
       return {
         id: user.id,
         name: user.name,
-        avatarUrl: user.avatarUrl, // 🚀 ADDED AVATAR
+        avatarUrl: user.avatarUrl, // ADDED AVATAR
         totalSwaps: totalSwaps
       };
     }).sort((a, b) => b.totalSwaps - a.totalSwaps);
@@ -216,7 +216,7 @@ app.get("/api/swap-requests", authenticateToken, async (req, res) => {
         ]
       },
       include: {
-        // 🚀 ADDED AVATAR
+        // ADDED AVATAR
         requester: { select: { id: true, name: true, avatarUrl: true } },
         receiver: { select: { id: true, name: true, avatarUrl: true } },
         offeredSkill: { select: { name: true } }, 
@@ -269,7 +269,7 @@ app.get("/api/swaps", authenticateToken, async (req, res) => {
     const swaps = await prisma.swap.findMany({
       where: { OR: [{ requesterId: userId }, { receiverId: userId }] },
       include: {
-        // 🚀 ADDED AVATAR
+        // ADDED AVATAR
         requester: { select: { id: true, name: true, avatarUrl: true } },
         receiver: { select: { id: true, name: true, avatarUrl: true } },
         offeredSkill: { select: { name: true } },
@@ -438,7 +438,7 @@ app.use((err: any, req: any, res: any, next: any) => {
 });
 
 const server = app.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`🚀 Knoxite Server Live on Port ${PORT}`);
+  console.log(`Knoxite Server Live on Port ${PORT}`);
 
 });
   server.on('error', (error: any) => {

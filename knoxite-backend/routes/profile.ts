@@ -102,7 +102,7 @@ router.post("/skills/want", authenticateToken, async (req: AuthRequest, res: any
 // ==========================================
 router.delete("/skills/:type/:skillId", authenticateToken, async (req: AuthRequest, res: any) => {
   const type = req.params.type as string;
-  const skillId = req.params.skillId as string; // 🚀 Force type to string
+  const skillId = req.params.skillId as string; // Force type to string
   const userId = req.userId as string;
 
   try {

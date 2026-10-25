@@ -110,11 +110,11 @@ model Message {
   createdAt  DateTime @default(now())
   senderId   String
   receiverId String
-  swapId     String   // 🚀 Link to the specific Swap instance
+  swapId     String   // Link to the specific Swap instance
 
   sender   User @relation("Sender", fields: [senderId], references: [id])
   receiver User @relation("Receiver", fields: [receiverId], references: [id])
-  swap     Swap @relation(fields: [swapId], references: [id]) // 🚀 Establishing relation
+  swap     Swap @relation(fields: [swapId], references: [id]) // Establishing relation
 }
 
 // -------------------------------------------------
@@ -145,7 +145,7 @@ model Swap {
   duration          Int      @default(1)
   sessions          Int      @default(4)
   
-  // 🚀 Bilateral Session Tracking
+  // Bilateral Session Tracking
   requesterSessions Int      @default(0)
   receiverSessions  Int      @default(0)
   
@@ -158,7 +158,7 @@ model Swap {
   wantedSkill  Skill @relation("ActiveWantedSkill", fields: [wantedSkillId], references: [id])
 
   reviews      Review[]
-  messages     Message[] // 🚀 Allows chat history to be tied to this swap
+  messages     Message[] // Allows chat history to be tied to this swap
 }
 
 enum Role {

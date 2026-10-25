@@ -26,7 +26,7 @@ router.get("/", authenticateToken, async (req: AuthRequest, res: any) => {
   try {
     const posts = await prisma.boardPost.findMany({
       include: {
-        author: { select: { name: true, avatarUrl: true } } // 🚀 Fetching Avatar!
+        author: { select: { name: true, avatarUrl: true } } // Fetching Avatar!
       },
       orderBy: { createdAt: "desc" }
     });

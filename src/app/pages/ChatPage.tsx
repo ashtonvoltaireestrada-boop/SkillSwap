@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router"; 
+import { useNavigate, useSearchParams } from "react-router";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card";
@@ -10,7 +10,7 @@ import { API_BASE_URL } from "@/config";
 
 export default function ChatPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams(); 
+  const [searchParams] = useSearchParams();
   const [conversations, setConversations] = useState<any[]>([]);
   const [selectedPartner, setSelectedPartner] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
@@ -20,7 +20,7 @@ export default function ChatPage() {
 
   const currentUser = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
   const urlPartnerId = searchParams.get("partnerId");
-  
+
   const handleBackClick = () => {
     if (window.innerWidth < 768 && selectedPartner) {
       setSelectedPartner(null);
@@ -34,33 +34,36 @@ export default function ChatPage() {
       try {
         const token = localStorage.getItem("knoxite_token");
         const res = await fetch(`${API_BASE_URL}/swaps`, {
-          headers: { 
-            "Authorization": `Bearer ${token}`,
-            "bypass-tunnel-reminder": "true" 
-          }
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "bypass-tunnel-reminder": "true",
+          },
         });
 
         if (res.ok) {
           const data = await res.json();
           const activeStatuses = ["ACCEPTED", "CONFIRMED", "PENDING_AGREEMENT"];
-          const activeSwaps = data.filter((s: any) => activeStatuses.includes(s.status));
-          
+          const activeSwaps = data.filter((s: any) =>
+            activeStatuses.includes(s.status)
+          );
+
           const formatted = activeSwaps.map((s: any) => {
-            const partner = s.requesterId === currentUser.id ? s.receiver : s.requester;
+            const partner =
+              s.requesterId === currentUser.id ? s.receiver : s.requester;
             return {
               id: partner.id,
               swapId: s.id,
               user: partner.name,
               swapInfo: `${s.offeredSkill.name} ↔ ${s.wantedSkill.name}`,
               avatarFallback: partner.name.charAt(0),
-              avatarUrl: partner.avatarUrl // 🚀 Added avatar mapping here
+              avatarUrl: partner.avatarUrl,
             };
           });
 
           setConversations(formatted);
 
           if (urlPartnerId) {
-            const target = formatted.find(c => c.id === urlPartnerId);
+            const target = formatted.find((c: any) => c.id === urlPartnerId);
             if (target) setSelectedPartner(target);
           } else if (formatted.length > 0 && !selectedPartner) {
             setSelectedPartner(formatted[0]);
@@ -81,12 +84,15 @@ export default function ChatPage() {
     const fetchMessages = async () => {
       try {
         const token = localStorage.getItem("knoxite_token");
-        const res = await fetch(`${API_BASE_URL}/chat/conversation/${selectedPartner.id}?swapId=${selectedPartner.swapId}`, {
-          headers: { 
-            "Authorization": `Bearer ${token}`,
-            "bypass-tunnel-reminder": "true"
+        const res = await fetch(
+          `${API_BASE_URL}/chat/conversation/${selectedPartner.id}?swapId=${selectedPartner.swapId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "bypass-tunnel-reminder": "true",
+            },
           }
-        });
+        );
         if (res.ok) {
           const data = await res.json();
           setMessages(data);
@@ -115,16 +121,16 @@ export default function ChatPage() {
       const token = localStorage.getItem("knoxite_token");
       const res = await fetch(`${API_BASE_URL}/chat/send`, {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-          "bypass-tunnel-reminder": "true"
+          Authorization: `Bearer ${token}`,
+          "bypass-tunnel-reminder": "true",
         },
-        body: JSON.stringify({ 
-          receiverId: selectedPartner.id, 
+        body: JSON.stringify({
+          receiverId: selectedPartner.id,
           content: messageInput,
-          swapId: selectedPartner.swapId 
-        })
+          swapId: selectedPartner.swapId,
+        }),
       });
 
       if (res.ok) {
@@ -139,113 +145,227 @@ export default function ChatPage() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-blue-50 flex flex-col items-center justify-center">
-        <Loader2 className="size-10 text-blue-600 animate-spin mb-4" />
-        <p className="text-blue-900 font-medium">Syncing Encryption...</p>
+      <div className="h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950">
+        <Loader2 className="size-8 text-blue-600 animate-spin mb-3" />
+        <p className="text-slate-900 dark:text-slate-200 font-bold text-xs uppercase tracking-widest">
+          Syncing Messages...
+        </p>
       </div>
     );
   }
 
   if (conversations.length === 0) {
     return (
-      <div className="h-screen bg-blue-50 flex flex-col items-center justify-center p-6 text-center">
-        <MessageSquare className="size-16 text-blue-200 mb-4" />
-        <h2 className="text-2xl font-black text-blue-900 mb-2 italic">NO ACTIVE CHATS</h2>
-        <p className="text-blue-600 mb-6 text-sm">Start a rotation to begin messaging your peers.</p>
-        <Button onClick={() => navigate("/dashboard")} className="bg-blue-600 hover:bg-blue-700 rounded-xl px-8 font-bold">
-          Go to Dashboard
-        </Button>
+      <div className="h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b50_1px,transparent_1px),linear-gradient(to_bottom,#1e293b50_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none" />
+        <div className="relative z-10 max-w-sm space-y-4">
+          <div className="size-16 rounded-3xl bg-blue-50 dark:bg-slate-900 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-xs border border-blue-100 dark:border-slate-800">
+            <MessageSquare className="size-8" />
+          </div>
+          <div className="space-y-1.5">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              No Active Swaps Yet
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+              Accept or initiate a bilateral swap to open direct workspace communications.
+            </p>
+          </div>
+          <Button
+            onClick={() => navigate("/dashboard")}
+            className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 h-11 text-xs font-bold shadow-md shadow-blue-600/20"
+          >
+            Return to Dashboard
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="h-screen max-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex flex-col overflow-hidden font-sans">
-      <header className="bg-white border-b border-blue-100 shadow-sm flex-none">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={handleBackClick} className="text-blue-600">
-              <ArrowLeft className="size-6" />
-            </Button>
-            <h1 className="text-xl font-black text-blue-900 italic tracking-tighter uppercase">Messages</h1>
-          </div>
-        </div>
-      </header>
+    <div className="h-screen max-h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col overflow-hidden font-sans relative transition-colors duration-200">
 
-      <div className="flex-1 max-w-7xl w-full mx-auto p-2 md:p-4 overflow-hidden min-h-0">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b50_1px,transparent_1px),linear-gradient(to_bottom,#1e293b50_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none" />
+
+      {/* FLOATING GLASS HEADER */}
+      <div className="flex-none pt-4 px-4 sm:px-6 z-30">
+        <header className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-5 py-3 rounded-2xl bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-xs">
+          <div className="flex items-center gap-2.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBackClick}
+              className="size-9 rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-800 hover:text-blue-700 transition-colors shrink-0"
+              title="Return"
+            >
+              <ArrowLeft className="size-5" />
+            </Button>
+
+            <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5 hidden sm:block" />
+
+            <div
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2.5 cursor-pointer"
+            >
+              <div className="size-9 bg-blue-600 rounded-xl flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-600/25">
+                K
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-xl font-black text-slate-900 dark:text-white tracking-tight">
+                  Chat
+                </span>
+              </div>
+            </div>
+          </div>
+        </header>
+      </div>
+
+      {/* CHAT CONTAINER */}
+      <div className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 overflow-hidden min-h-0 relative z-10">
         <div className="grid grid-cols-12 gap-4 h-full min-h-0">
-          
-          <Card className={`${selectedPartner ? "hidden md:flex" : "flex"} col-span-12 md:col-span-4 bg-white/90 backdrop-blur border-blue-100 flex-col overflow-hidden h-full rounded-2xl`}>
-            <CardHeader className="flex-none border-b"><CardTitle className="text-blue-900 text-sm font-black uppercase tracking-widest">Inbox</CardTitle></CardHeader>
+          {/* INBOX SIDEBAR */}
+          <Card
+            className={`${
+              selectedPartner ? "hidden md:flex" : "flex"
+            } col-span-12 md:col-span-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur border-slate-200/90 dark:border-slate-800 flex-col overflow-hidden h-full rounded-3xl shadow-xs`}
+          >
+            <CardHeader className="flex-none border-b border-slate-100 dark:border-slate-800 px-5 py-4">
+              <CardTitle className="text-slate-900 dark:text-white text-xs font-bold uppercase tracking-widest">
+                <span>Conversations</span>
+              </CardTitle>
+            </CardHeader>
             <CardContent className="flex-1 overflow-hidden p-0">
               <ScrollArea className="h-full">
-                <div className="space-y-1 p-2">
-                  {conversations.map((conv) => (
-                    <div
-                      key={`${conv.id}-${conv.swapId}`}
-                      onClick={() => setSelectedPartner(conv)}
-                      className={`p-3 rounded-xl cursor-pointer transition-all border ${
-                        selectedPartner?.swapId === conv.swapId ? "bg-blue-600 text-white border-blue-700 shadow-md" : "hover:bg-blue-50 border-transparent text-blue-900"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Avatar className="size-10 border border-white/20">
-                          {/* 🚀 FIXED: Added actual AvatarImage for Inbox Sidebar */}
-                          <AvatarImage src={conv.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.user}`} />
-                          <AvatarFallback className="bg-blue-900 text-white font-bold">{conv.avatarFallback}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
-                          <h3 className={`font-bold text-sm truncate ${selectedPartner?.swapId === conv.swapId ? "text-white" : "text-blue-900"}`}>{conv.user}</h3>
-                          <p className={`text-[10px] truncate uppercase font-bold tracking-tighter ${selectedPartner?.swapId === conv.swapId ? "text-blue-100" : "text-blue-400"}`}>{conv.swapInfo}</p>
+                <div className="space-y-1.5 p-3">
+                  {conversations.map((conv) => {
+                    const isSelected = selectedPartner?.swapId === conv.swapId;
+                    return (
+                      <div
+                        key={`${conv.id}-${conv.swapId}`}
+                        onClick={() => setSelectedPartner(conv)}
+                        className={`p-3 rounded-2xl cursor-pointer transition-all border ${
+                          isSelected
+                            ? "bg-blue-600 text-white border-blue-600 shadow-sm shadow-blue-600/20"
+                            : "hover:bg-slate-50 dark:hover:bg-slate-800/70 border-transparent text-slate-800 dark:text-slate-200"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <Avatar className="size-10 rounded-xl ring-1 ring-slate-200/50 dark:ring-slate-700 shrink-0">
+                            <AvatarImage
+                              src={
+                                conv.avatarUrl ||
+                                `https://api.dicebear.com/7.x/avataaars/svg?seed=${conv.user}`
+                              }
+                            />
+                            <AvatarFallback
+                              className={`font-black rounded-xl text-xs ${
+                                isSelected
+                                  ? "bg-blue-800 text-white"
+                                  : "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200"
+                              }`}
+                            >
+                              {conv.avatarFallback}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <h3
+                              className={`font-bold text-sm truncate ${
+                                isSelected ? "text-white" : "text-slate-900 dark:text-white"
+                              }`}
+                            >
+                              {conv.user}
+                            </h3>
+                            <p
+                              className={`text-[10px] truncate uppercase font-bold tracking-wider mt-0.5 ${
+                                isSelected ? "text-blue-100" : "text-slate-400 dark:text-slate-500"
+                              }`}
+                            >
+                              {conv.swapInfo}
+                            </p>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </ScrollArea>
             </CardContent>
           </Card>
 
-          <Card className={`${!selectedPartner ? "hidden md:flex" : "flex"} col-span-12 md:col-span-8 bg-white shadow-xl border-blue-100 flex flex-col overflow-hidden h-full rounded-2xl`}>
+          {/* ACTIVE CHAT WORKSPACE */}
+          <Card
+            className={`${
+              !selectedPartner ? "hidden md:flex" : "flex"
+            } col-span-12 md:col-span-8 bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 flex flex-col overflow-hidden h-full rounded-3xl shadow-xs`}
+          >
             {selectedPartner ? (
               <>
-                <CardHeader className="border-b border-blue-100 flex-none p-3 md:p-4">
+                <CardHeader className="border-b border-slate-100 dark:border-slate-800 flex-none px-5 py-3.5 bg-white dark:bg-slate-900">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className="size-10 shrink-0 ring-2 ring-blue-50">
-                        {/* 🚀 FIXED: Added actual AvatarImage for Main Chat Header */}
-                        <AvatarImage src={selectedPartner.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedPartner.user}`} />
-                        <AvatarFallback className="bg-blue-600 text-white font-black">{selectedPartner.avatarFallback}</AvatarFallback>
+                      <Avatar className="size-10 shrink-0 rounded-xl ring-1 ring-slate-200 dark:ring-slate-700">
+                        <AvatarImage
+                          src={
+                            selectedPartner.avatarUrl ||
+                            `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedPartner.user}`
+                          }
+                        />
+                        <AvatarFallback className="bg-blue-600 text-white font-black rounded-xl text-xs">
+                          {selectedPartner.avatarFallback}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <CardTitle className="text-sm md:text-base text-blue-900 font-bold truncate">{selectedPartner.user}</CardTitle>
-                        <p className="text-[10px] md:text-xs text-blue-500 font-medium truncate">{selectedPartner.swapInfo}</p>
+                        <CardTitle className="text-sm md:text-base text-slate-900 dark:text-white font-bold truncate">
+                          {selectedPartner.user}
+                        </CardTitle>
+                        <p className="text-[10px] md:text-xs text-blue-600 dark:text-blue-400 font-semibold truncate">
+                          {selectedPartner.swapInfo}
+                        </p>
                       </div>
                     </div>
-                    
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={() => navigate(`/swap-agreement/${selectedPartner.swapId}`)}
-                      className="border-blue-200 text-blue-600 hover:bg-blue-50 text-[10px] md:text-xs gap-1.5 rounded-xl h-8 px-3 shrink-0 font-bold"
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        navigate(`/swap-agreement/${selectedPartner.swapId}`)
+                      }
+                      className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 text-[10px] md:text-xs gap-1.5 rounded-xl h-8 px-3.5 shrink-0 font-bold"
                     >
-                      <FileCheck className="size-3.5" />
+                      <FileCheck className="size-3.5 text-blue-600 dark:text-blue-400" />
                       View Deal
                     </Button>
                   </div>
                 </CardHeader>
 
-                <CardContent className="flex-1 overflow-hidden p-0 flex flex-col min-h-0 bg-blue-50/10">
+                <CardContent className="flex-1 overflow-hidden p-0 flex flex-col min-h-0 bg-slate-50/40 dark:bg-slate-950/40">
                   <ScrollArea className="flex-1 w-full h-full">
-                    <div className="p-4 space-y-4">
+                    <div className="p-4 sm:p-5 space-y-2.5">
                       {messages.map((m) => {
                         const isOwn = m.senderId === currentUser.id;
                         return (
-                          <div key={m.id} className={`flex ${isOwn ? "justify-end" : "justify-start"}`}>
-                            <div className={`max-w-[85%] md:max-w-[70%] rounded-2xl p-3 shadow-sm ${isOwn ? "bg-blue-600 text-white rounded-tr-none" : "bg-white text-blue-900 rounded-tl-none border border-blue-100"}`}>
-                              <p className="text-sm leading-relaxed">{m.content}</p>
-                              <span className={`text-[9px] mt-1 block opacity-70 font-bold ${isOwn ? "text-right" : "text-left"}`}>
-                                {new Date(m.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          <div
+                            key={m.id}
+                            className={`flex ${isOwn ? "justify-end" : "justify-start"}`}
+                          >
+                            <div
+                              className={`max-w-[80%] md:max-w-[65%] px-4 py-2.5 shadow-2xs ${
+                                isOwn
+                                  ? "bg-blue-600 text-white rounded-2xl rounded-br-sm"
+                                  : "bg-slate-200/90 dark:bg-slate-800 text-slate-900 dark:text-slate-100 rounded-2xl rounded-bl-sm"
+                              }`}
+                            >
+                              <p className="text-sm font-normal leading-relaxed whitespace-pre-wrap">
+                                {m.content}
+                              </p>
+                              <span
+                                className={`text-[10px] mt-1 block font-medium ${
+                                  isOwn ? "text-blue-200 text-right" : "text-slate-500 dark:text-slate-400 text-left"
+                                }`}
+                              >
+                                {new Date(m.createdAt).toLocaleTimeString([], {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
                               </span>
                             </div>
                           </div>
@@ -255,24 +375,28 @@ export default function ChatPage() {
                     </div>
                   </ScrollArea>
 
-                  <div className="border-t border-blue-100 p-3 md:p-4 bg-white flex-none">
+                  <div className="border-t border-slate-200/80 dark:border-slate-800 p-3 md:p-4 bg-white dark:bg-slate-900 flex-none">
                     <form onSubmit={handleSendMessage} className="flex gap-2">
                       <Input
                         value={messageInput}
                         onChange={(e) => setMessageInput(e.target.value)}
-                        placeholder="Message peer..."
-                        className="flex-1 border-blue-100 focus-visible:ring-blue-600 bg-blue-50/20 rounded-xl h-10 md:h-12 font-medium"
+                        placeholder="Type a message..."
+                        className="flex-1 border-slate-200 dark:border-slate-700 focus-visible:ring-blue-600 bg-slate-50/60 dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl h-11 text-xs sm:text-sm font-medium"
                       />
-                      <Button type="submit" size="icon" className="bg-blue-600 hover:bg-blue-700 text-white shrink-0 rounded-xl h-10 w-10 md:h-12 md:w-12 shadow-md shadow-blue-100">
-                        <Send className="size-5" />
+                      <Button
+                        type="submit"
+                        size="icon"
+                        className="bg-blue-600 hover:bg-blue-700 text-white shrink-0 rounded-xl h-11 w-11 shadow-sm shadow-blue-600/20"
+                      >
+                        <Send className="size-4" />
                       </Button>
                     </form>
                   </div>
                 </CardContent>
               </>
             ) : (
-              <div className="flex-1 flex flex-col items-center justify-center text-blue-300 p-4 text-center italic">
-                Select a rotation to start messaging.
+              <div className="flex-1 flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 p-4 text-center text-xs">
+                Select an active exchange thread from the left to start messaging.
               </div>
             )}
           </Card>

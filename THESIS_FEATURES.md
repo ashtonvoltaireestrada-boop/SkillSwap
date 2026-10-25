@@ -30,7 +30,7 @@ A comprehensive peer-to-peer skill exchange platform demonstrating advanced conc
 18. **Leaderboard** (`/leaderboard`) - Live database aggregation ranking top mentors and highest volume swappers
 
 ### Analytics & Insights
-21. **Notification Center** (`/requests`) - Smart notification system tracking pending swap requests
+21. **Notification Center** (`/notification`) - Smart notification system tracking pending swap requests
 22. **Admin Analytics Dashboard** (`/analytics`) - insights featuring learning progress and activity patterns
 
 ### Community Features

@@ -97,7 +97,7 @@ router.post("/skills/want", authMiddleware_1.authenticateToken, async (req, res)
 // ==========================================
 router.delete("/skills/:type/:skillId", authMiddleware_1.authenticateToken, async (req, res) => {
     const type = req.params.type;
-    const skillId = req.params.skillId; // 🚀 Force type to string
+    const skillId = req.params.skillId; // Force type to string
     const userId = req.userId;
     try {
         // We update directly inside the call to avoid 'updateData' typing issues
