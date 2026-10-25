@@ -137,7 +137,7 @@ export default function LeaderboardPage() {
           onValueChange={(val: any) => setActiveTab(val)}
           className="space-y-6"
         >
-          {/* TABS LIST WITH RELIABLE BLUE & EMERALD ACTIVE COLORING */}
+
           <TabsList className="grid grid-cols-2 w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 h-12 p-1= rounded-2xl shadow-xs">
             <TabsTrigger
               value="mentors"
@@ -174,7 +174,7 @@ export default function LeaderboardPage() {
             <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-6 sm:p-8 shadow-xs space-y-6">
               <div className="border-b border-slate-100 dark:border-slate-800 pb-4">
                 <h2 className="text-lg font-black text-slate-900 dark:text-white">
-                  Top Peer Mentors
+                  Top Mentors
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
                   Ranked by average 5-star quality rating and verified student reviews.

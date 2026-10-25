@@ -1,5 +1,4 @@
 import { driver } from 'driver.js';
-import 'driver.js/dist/driver.css';
 
 export function useOnboardingTour() {
   const startTour = (force = false) => {
@@ -36,17 +35,7 @@ export function useOnboardingTour() {
         driverObj.destroy();
       },
       steps: [
-        {
-          element: '#tour-community-forum',
-          popover: {
-            title: 'Explore community discussions and forum posts.',
-            description: 'Please click the button to continue',
-            side: 'right',
-            align: 'center',
-            showButtons: [],
-          },
-          onHighlightStarted: () => attachStepClick('#tour-community-forum'),
-        },
+        // 1. KnoxHub
         {
           element: '#tour-knoxhub',
           popover: {
@@ -58,17 +47,7 @@ export function useOnboardingTour() {
           },
           onHighlightStarted: () => attachStepClick('#tour-knoxhub'),
         },
-        {
-          element: '#tour-leaderboard',
-          popover: {
-            title: 'View top contributors and milestones.',
-            description: 'Please click the button to continue.',
-            side: 'right',
-            align: 'center',
-            showButtons: [],
-          },
-          onHighlightStarted: () => attachStepClick('#tour-leaderboard'),
-        },
+        // 2. My Skills
         {
           element: '#tour-my-skills',
           popover: {
@@ -80,6 +59,31 @@ export function useOnboardingTour() {
           },
           onHighlightStarted: () => attachStepClick('#tour-my-skills'),
         },
+        // 3. Community Forum
+        {
+          element: '#tour-community-forum',
+          popover: {
+            title: 'Explore community discussions and forum posts.',
+            description: 'Please click the button to continue',
+            side: 'right',
+            align: 'center',
+            showButtons: [],
+          },
+          onHighlightStarted: () => attachStepClick('#tour-community-forum'),
+        },
+        // 4. Leaderboard
+        {
+          element: '#tour-leaderboard',
+          popover: {
+            title: 'View top mentors and most active users.',
+            description: 'Please click the button to continue.',
+            side: 'right',
+            align: 'center',
+            showButtons: [],
+          },
+          onHighlightStarted: () => attachStepClick('#tour-leaderboard'),
+        },
+        // 5. Messages
         {
           element: '#tour-nav-messages',
           popover: {
@@ -91,6 +95,7 @@ export function useOnboardingTour() {
           },
           onHighlightStarted: () => attachStepClick('#tour-nav-messages'),
         },
+        // 6. Header Notifications
         {
           element: '#tour-nav-notifications',
           popover: {
@@ -102,10 +107,11 @@ export function useOnboardingTour() {
           },
           onHighlightStarted: () => attachStepClick('#tour-nav-notifications'),
         },
+        // 7. Profile Menu (Finish)
         {
           element: '#tour-nav-profile',
           popover: {
-            title: 'Manage your account settings, profile, and credentials.',
+            title: 'Manage your account settings, profile, and display preferences.',
             description: 'Please click the button to finish',
             side: 'bottom',
             align: 'end',
