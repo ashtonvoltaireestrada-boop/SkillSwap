@@ -143,9 +143,10 @@ export default function ChatPage() {
     }
   };
 
+  // FIXED: Centered loading state
   if (loading) {
     return (
-      <div className="h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950">
+      <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 p-4 text-center">
         <Loader2 className="size-8 text-blue-600 animate-spin mb-3" />
         <p className="text-slate-900 dark:text-slate-200 font-bold text-xs uppercase tracking-widest">
           Syncing Messages...
@@ -154,9 +155,10 @@ export default function ChatPage() {
     );
   }
 
+  // FIXED: Centered empty state card
   if (conversations.length === 0) {
     return (
-      <div className="h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950">
+      <div className="h-screen w-full flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 relative overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b50_1px,transparent_1px),linear-gradient(to_bottom,#1e293b50_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none" />
         <div className="relative z-10 max-w-sm space-y-4">
           <div className="size-16 rounded-3xl bg-blue-50 dark:bg-slate-900 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto shadow-xs border border-blue-100 dark:border-slate-800">
@@ -183,7 +185,6 @@ export default function ChatPage() {
 
   return (
     <div className="h-screen max-h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col overflow-hidden font-sans relative transition-colors duration-200">
-
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b50_1px,transparent_1px),linear-gradient(to_bottom,#1e293b50_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none" />
 
       {/* FLOATING GLASS HEADER */}
