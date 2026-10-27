@@ -82,12 +82,15 @@ export default function DashboardPage() {
   }, [navigate]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      startTour();
-    }, 500);
+    // Only run the onboarding tour after the dashboard has finished loading data
+    if (!isLoading) {
+      const timer = setTimeout(() => {
+        startTour();
+      }, 400);
 
-    return () => clearTimeout(timer);
-  }, []);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -764,6 +767,6 @@ function ActiveSwapCard({ swap, currentUserId }: any) {
           })}
         </div>
       </div>
-    </div>
+    </div>    
   );
 }
