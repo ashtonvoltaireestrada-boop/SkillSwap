@@ -1,15 +1,32 @@
 import { driver } from 'driver.js';
-import 'driver.js/dist/driver.css'; // Ensure driver CSS is imported
+import 'driver.js/dist/driver.css'; // Ensures Driver.js overlay styling loads properly
 
 export function useOnboardingTour() {
   const startTour = (force = false) => {
     const hasSeenTour = localStorage.getItem('knoxite_onboarding_completed');
     if (hasSeenTour && !force) return;
 
-    const driverObj = driver({
-      showProgress: true,
+    let driverObj: any;
+
+    const attachStepClick = (elementSelector: string) => {
+      setTimeout(() => {
+        const el = document.querySelector(elementSelector);
+        if (el) {
+          const handler = (e: Event) => {
+            e.preventDefault();
+            e.stopPropagation();
+            el.removeEventListener('click', handler, true);
+            driverObj.moveNext();
+          };
+          el.addEventListener('click', handler, true);
+        }
+      }, 50);
+    };
+
+    driverObj = driver({
+      showProgress: false,
       animate: true,
-      allowClose: true, // Allows user to exit the tour anytime
+      allowClose: false,
       overlayOpacity: 0.45,
       stagePadding: 6,
       stageRadius: 10,
@@ -19,83 +36,99 @@ export function useOnboardingTour() {
         driverObj.destroy();
       },
       steps: [
+        // 1. KnoxHub
         {
           element: '#tour-knoxhub',
           popover: {
-            title: 'KnoxHub',
-            description: 'Browse active skill exchange requests across campus.',
+            title: 'Browse active skill exchange requests across campus.',
+            description: 'Please click the button to continue.',
             side: 'right',
             align: 'center',
-            showButtons: ['next', 'close'],
+            showButtons: [],
           },
+          onHighlightStarted: () => attachStepClick('#tour-knoxhub'),
         },
+        // 2. My Skills
         {
           element: '#tour-my-skills',
           popover: {
-            title: 'My Skills',
-            description: 'Manage your offered and requested skills.',
+            title: 'Manage your offered and requested skills.',
+            description: 'Please click the button to continue.',
             side: 'right',
             align: 'center',
-            showButtons: ['next', 'previous', 'close'],
+            showButtons: [],
           },
+          onHighlightStarted: () => attachStepClick('#tour-my-skills'),
         },
+        // 3. Community Forum
         {
           element: '#tour-community-forum',
           popover: {
-            title: 'Community Forum',
-            description: 'Explore community discussions and forum posts.',
+            title: 'Explore community discussions and forum posts.',
+            description: 'Please click the button to continue.',
             side: 'right',
             align: 'center',
-            showButtons: ['next', 'previous', 'close'],
+            showButtons: [],
           },
+          onHighlightStarted: () => attachStepClick('#tour-community-forum'),
         },
+        // 4. Leaderboard
         {
           element: '#tour-leaderboard',
           popover: {
-            title: 'Leaderboard',
-            description: 'View top mentors and most active users.',
+            title: 'View top mentors and most active users.',
+            description: 'Please click the button to continue.',
             side: 'right',
             align: 'center',
-            showButtons: ['next', 'previous', 'close'],
+            showButtons: [],
           },
+          onHighlightStarted: () => attachStepClick('#tour-leaderboard'),
         },
+        // 5. Messages
         {
           element: '#tour-nav-messages',
           popover: {
-            title: 'Messages',
-            description: 'Access your chats and direct skill discussions.',
+            title: 'Access your chats and direct skill discussions.',
+            description: 'Please click the button to continue.',
             side: 'bottom',
             align: 'end',
-            showButtons: ['next', 'previous', 'close'],
+            showButtons: [],
           },
+          onHighlightStarted: () => attachStepClick('#tour-nav-messages'),
         },
+        // 6. Header Notifications
         {
           element: '#tour-nav-notifications',
           popover: {
-            title: 'Notifications',
-            description: 'Stay updated on swap requests and activity alerts.',
+            title: 'Stay updated on swap requests and activity alerts.',
+            description: 'Please click the button to continue.',
             side: 'bottom',
             align: 'end',
-            showButtons: ['next', 'previous', 'close'],
+            showButtons: [],
           },
+          onHighlightStarted: () => attachStepClick('#tour-nav-notifications'),
         },
+        // 7. Profile Menu (Finish)
         {
           element: '#tour-nav-profile',
           popover: {
-            title: 'Profile Menu',
-            description: 'Manage your account settings, profile, and display preferences.',
+            title: 'Manage your account settings, profile, and display preferences.',
+            description: 'Please click the button to finish.',
             side: 'bottom',
             align: 'end',
-            showButtons: ['next', 'previous', 'close'],
+            showButtons: [],
           },
+          onHighlightStarted: () => attachStepClick('#tour-nav-profile'),
         },
       ],
     });
 
-    // Small delay ensures dashboard/navbar DOM elements are mounted before tour starts
+    // Wait 500ms for React layout and DOM elements to finish rendering
     setTimeout(() => {
-      driverObj.drive();
-    }, 300);
+      if (document.querySelector('#tour-knoxhub')) {
+        driverObj.drive();
+      }
+    }, 500);
   };
 
   return { startTour };
