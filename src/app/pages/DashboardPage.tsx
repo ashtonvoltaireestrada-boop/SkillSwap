@@ -208,12 +208,43 @@ export default function DashboardPage() {
     }
   };
 
-  const activeRotations = swaps.filter(
-    (s) =>
-      s.status === "CONFIRMED" ||
-      s.status === "PENDING_AGREEMENT" ||
-      s.status === "ACCEPTED"
+  const activeRotations = swaps.filter((s) => {
+  // 1. Exclude unaccepted / pending requests (must be accepted first)
+  const isUnaccepted =
+    s.status === "PENDING" ||
+    s.status === "REQUESTED" ||
+    s.isAccepted === false ||
+    s.accepted === false;
+
+  if (isUnaccepted) return false;
+
+  // 2. Exclude completed, cancelled, or rejected swaps
+  const isInactiveStatus =
+    s.status === "COMPLETED" ||
+    s.status === "FINISHED" ||
+    s.status === "CANCELLED" ||
+    s.status === "REJECTED";
+
+  if (isInactiveStatus) return false;
+
+  // 3. Exclude swaps where both parties have completed their evaluations
+  const isBothEvaluated =
+    (s.requesterReviewed && s.receiverReviewed) ||
+    (s.requesterEvaluated && s.receiverEvaluated) ||
+    (s.requesterHasEvaluated && s.receiverHasEvaluated) ||
+    (Array.isArray(s.evaluations) && s.evaluations.length >= 2) ||
+    s.isCompleted === true;
+
+  if (isBothEvaluated) return false;
+
+  // 4. Keep only active swap statuses
+  return (
+    s.status === "CONFIRMED" ||
+    s.status === "PENDING_AGREEMENT" ||
+    s.status === "ACCEPTED" ||
+    s.status === "IN_PROGRESS"
   );
+});
 
   const toggleDarkMode = () => {
     const user = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
