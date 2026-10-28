@@ -8,6 +8,7 @@ import {
   Star, Award, Loader2, Send 
 } from "lucide-react";
 import { API_BASE_URL } from "@/config";
+import { socket } from "@/utils/socket"; // ⚡ Import Socket Client
 
 export default function SwapDetailsPage() {
   const { swapId } = useParams();
@@ -20,6 +21,34 @@ export default function SwapDetailsPage() {
     const user = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
     setCurrentUser(user);
     fetchDetails(); 
+  }, [swapId]);
+
+  // ⚡ REAL-TIME SESSION LOG & STATUS LISTENER
+  useEffect(() => {
+    if (!swapId) return;
+
+    // Connect to Socket.IO and join the swap room
+    socket.connect();
+    socket.emit("join_swap_room", swapId);
+
+    // Re-fetch details whenever a peer logs a session or updates status
+    const handleProgressUpdate = (updatedSwap: any) => {
+      if (updatedSwap.id === swapId) {
+        fetchDetails();
+      }
+    };
+
+    const handleSwapUpdate = () => {
+      fetchDetails();
+    };
+
+    socket.on("swap_progress_updated", handleProgressUpdate);
+    socket.on("swap_updated", handleSwapUpdate);
+
+    return () => {
+      socket.off("swap_progress_updated", handleProgressUpdate);
+      socket.off("swap_updated", handleSwapUpdate);
+    };
   }, [swapId]);
 
   const fetchDetails = async () => {
@@ -84,7 +113,7 @@ export default function SwapDetailsPage() {
   const readyToReview = iAmDone && partnerIsDone && !isCompleted;
 
   return (
-   <div className="min-h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950   text-slate-900 dark:text-slate-100 font-sans flex flex-col relative overflow-x-hidden transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col relative overflow-x-hidden transition-colors duration-200">
 
       {/* SUBTLE ARCHITECTURAL GRID */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none" />
@@ -280,4 +309,4 @@ export default function SwapDetailsPage() {
       </footer>
     </div>
   );
-}
+} 

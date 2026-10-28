@@ -7,6 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { ScrollArea } from "@/app/components/ui/scroll-area";
 import { ArrowLeft, Send, Loader2, FileCheck, MessageSquare } from "lucide-react";
 import { API_BASE_URL } from "@/config";
+import { socket } from "@/utils/socket"; // ⚡ Import Socket Client
 
 export default function ChatPage() {
   const navigate = useNavigate();
@@ -78,6 +79,7 @@ export default function ChatPage() {
     fetchConversations();
   }, [urlPartnerId]);
 
+  // ⚡ REAL-TIME MESSAGING EFFECT (Replaces setInterval polling)
   useEffect(() => {
     if (!selectedPartner) return;
 
@@ -103,8 +105,27 @@ export default function ChatPage() {
     };
 
     fetchMessages();
-    const interval = setInterval(fetchMessages, 3000);
-    return () => clearInterval(interval);
+
+    // Connect to Socket.IO and join this swap's real-time room
+    socket.connect();
+    socket.emit("join_swap_room", selectedPartner.swapId);
+
+    // Listen for real-time incoming messages
+    const handleReceiveMessage = (newMessage: any) => {
+      if (newMessage.swapId === selectedPartner.swapId) {
+        setMessages((prev) => {
+          // Prevent duplicate message renders
+          if (prev.some((m) => m.id === newMessage.id)) return prev;
+          return [...prev, newMessage];
+        });
+      }
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+
+    return () => {
+      socket.off("receive_message", handleReceiveMessage);
+    };
   }, [selectedPartner?.id, selectedPartner?.swapId]);
 
   useEffect(() => {
@@ -135,7 +156,10 @@ export default function ChatPage() {
 
       if (res.ok) {
         const sentMsg = await res.json();
-        setMessages((prev) => [...prev, sentMsg]);
+        setMessages((prev) => {
+          if (prev.some((m) => m.id === sentMsg.id)) return prev;
+          return [...prev, sentMsg];
+        });
         setMessageInput("");
       }
     } catch (err) {
@@ -143,7 +167,6 @@ export default function ChatPage() {
     }
   };
 
-  // FIXED: Centered loading state
   if (loading) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 p-4 text-center">
@@ -155,7 +178,6 @@ export default function ChatPage() {
     );
   }
 
-  // FIXED: Centered empty state card
   if (conversations.length === 0) {
     return (
       <div className="h-screen w-full flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 relative overflow-hidden">

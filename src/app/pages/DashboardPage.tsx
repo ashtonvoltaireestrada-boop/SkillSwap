@@ -26,6 +26,7 @@ import {
   Sun,
 } from "lucide-react";
 import { API_BASE_URL } from "@/config";
+import { socket } from "@/utils/socket"; // ⚡ Import Socket Client
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -81,6 +82,34 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [navigate]);
 
+  // ⚡ REAL-TIME DASHBOARD & NOTIFICATION LISTENER
+  useEffect(() => {
+    const user = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
+    if (!user.id) return;
+
+    // Connect socket & join user's notification room
+    socket.connect();
+    socket.emit("join_user_room", user.id);
+
+    const handleSwapUpdate = () => {
+      fetchDashboardData();
+    };
+
+    const handleNewNotification = () => {
+      setHasNewNotifications(true);
+    };
+
+    socket.on("swap_updated", handleSwapUpdate);
+    socket.on("swap_progress_updated", handleSwapUpdate);
+    socket.on("new_notification", handleNewNotification);
+
+    return () => {
+      socket.off("swap_updated", handleSwapUpdate);
+      socket.off("swap_progress_updated", handleSwapUpdate);
+      socket.off("new_notification", handleNewNotification);
+    };
+  }, []);
+
   useEffect(() => {
     // Only run the onboarding tour after the dashboard has finished loading data
     if (!isLoading) {
@@ -132,7 +161,7 @@ export default function DashboardPage() {
       }
     } catch (error) {
       console.error("Dashboard Sync Error:", error);
-    } finally {
+    } fontinally {
       setIsLoading(false);
     }
   };

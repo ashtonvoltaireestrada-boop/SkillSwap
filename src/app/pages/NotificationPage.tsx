@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/ta
 import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar";
 import { ArrowLeft, Loader2, Repeat, Check, X, Trash2 } from "lucide-react";
 import { API_BASE_URL } from "@/config";
+import { socket } from "@/utils/socket"; // ⚡ Import Socket Client
 
 export default function NotificationPage() {
   const navigate = useNavigate();
@@ -20,6 +21,33 @@ export default function NotificationPage() {
       setCurrentUserId(JSON.parse(userString).id);
     }
     fetchSwaps();
+  }, []);
+
+  // ⚡ REAL-TIME NOTIFICATIONS & REQUESTS LISTENER
+  useEffect(() => {
+    const userString =
+      localStorage.getItem("knoxite_user") || localStorage.getItem("user");
+    const userId = userString ? JSON.parse(userString).id : null;
+    if (!userId) return;
+
+    // Connect to Socket.IO and join user's notification channel
+    socket.connect();
+    socket.emit("join_user_room", userId);
+
+    // Re-fetch notification list when a swap request or status changes live
+    const handleNotificationUpdate = () => {
+      fetchSwaps();
+    };
+
+    socket.on("new_notification", handleNotificationUpdate);
+    socket.on("swap_updated", handleNotificationUpdate);
+    socket.on("swap_progress_updated", handleNotificationUpdate);
+
+    return () => {
+      socket.off("new_notification", handleNotificationUpdate);
+      socket.off("swap_updated", handleNotificationUpdate);
+      socket.off("swap_progress_updated", handleNotificationUpdate);
+    };
   }, []);
 
   const fetchSwaps = async () => {

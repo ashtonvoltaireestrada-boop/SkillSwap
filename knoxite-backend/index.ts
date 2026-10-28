@@ -1,5 +1,7 @@
 import express from "express";
 import cors from "cors";
+import http from "http"; // 1. IMPORT HTTP
+import { Server } from "socket.io"; // 2. IMPORT SOCKET.IO
 import { PrismaClient } from "@prisma/client";
 import authRoutes from "./routes/auth";
 import profileRoutes from "./routes/profile";
@@ -15,12 +17,51 @@ const app = express();
 const prisma = new PrismaClient();
 const PORT = process.env.PORT || 5000;
 
+// 3. CREATE HTTP SERVER & SOCKET.IO INSTANCE
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Accepts connections from Vercel deployment
+    methods: ["GET", "POST", "PATCH", "PUT", "DELETE"],
+  },
+});
+
 app.use(cors());
 // INCREASE PAYLOAD LIMIT for base64 images
 app.use(express.json({ limit: '10mb' }));
 
+// 4. PASS SOCKET.IO INSTANCE TO ALL EXPRESS ROUTES (req.io)
+app.use((req: any, res, next) => {
+  req.io = io;
+  next();
+});
+
+// 5. SOCKET.IO REAL-TIME CONNECTION & ROOM HANDLERS
+io.on("connection", (socket) => {
+  console.log("⚡ Real-time client connected:", socket.id);
+
+  // User joins their personal room for real-time notifications/badge updates
+  socket.on("join_user_room", (userId: string) => {
+    if (userId) {
+      socket.join(userId);
+      console.log(`👤 User ${userId} joined personal notification room`);
+    }
+  });
+
+  // User joins a active swap chat room
+  socket.on("join_swap_room", (swapId: string) => {
+    if (swapId) {
+      socket.join(`swap_${swapId}`);
+      console.log(`💬 Socket ${socket.id} joined swap room swap_${swapId}`);
+    }
+  });
+
+  socket.on("disconnect", () => {
+    console.log("🔌 Real-time client disconnected:", socket.id);
+  });
+});
+
 // --- THE BULLETPROOF PROFILE UPDATE BYPASS ---
-// Placed at the root level to guarantee route registration
 app.put("/api/profile/update", authenticateToken, async (req: any, res: any) => {
   console.log("✅ SUCCESS: The backend received the profile update request!");
   
@@ -73,7 +114,7 @@ app.get("/api/leaderboard", authenticateToken, async (req, res) => {
       return {
         id: user.id,
         name: user.name,
-        avatarUrl: user.avatarUrl, // ADDED AVATAR
+        avatarUrl: user.avatarUrl,
         skills: user.offeredSkills.map(s => s.name).join(", ") || "Member",
         rating: avgRating.toFixed(1),
         reviews: totalReviews,
@@ -102,7 +143,7 @@ app.get("/api/leaderboard/swaps", authenticateToken, async (req, res) => {
       return {
         id: user.id,
         name: user.name,
-        avatarUrl: user.avatarUrl, // ADDED AVATAR
+        avatarUrl: user.avatarUrl,
         totalSwaps: totalSwaps
       };
     }).sort((a, b) => b.totalSwaps - a.totalSwaps);
@@ -162,7 +203,6 @@ app.get("/api/matches", authenticateToken, async (req, res) => {
       take: 6
     });
 
-    // Note: Because we use 'include' above, prisma naturally returns all scalars, so avatarUrl and bio are automatically included here!
     res.json(recommendedPeers);
   } catch (error) {
     console.error("Radar Error:", error);
@@ -170,10 +210,10 @@ app.get("/api/matches", authenticateToken, async (req, res) => {
   }
 });
 
-// --- 3. SWAP REQUEST HANDLERS ---
-app.post("/api/swaps/request", authenticateToken, async (req, res) => {
+// --- 3. SWAP REQUEST HANDLERS (WITH REAL-TIME EMITS) ---
+app.post("/api/swaps/request", authenticateToken, async (req: any, res: any) => {
   const { receiverId, offeredSkillId, wantedSkillId } = req.body;
-  const requesterId = (req as any).user?.id || (req as any).userId;
+  const requesterId = req.user?.id || req.userId;
 
   try {
     await prisma.swap.create({
@@ -197,6 +237,12 @@ app.post("/api/swaps/request", authenticateToken, async (req, res) => {
       }
     });
 
+    // ⚡ REAL-TIME EMIT: Notify receiver immediately
+    if (req.io) {
+      req.io.to(receiverId).emit("swap_updated", { type: "NEW_REQUEST" });
+      req.io.to(receiverId).emit("new_notification", { type: "SWAP_REQUEST" });
+    }
+
     res.status(201).json(newRequest);
   } catch (error: any) {
     console.error("DEBUG REQUEST ERROR:", error.message);
@@ -216,7 +262,6 @@ app.get("/api/swap-requests", authenticateToken, async (req, res) => {
         ]
       },
       include: {
-        // ADDED AVATAR
         requester: { select: { id: true, name: true, avatarUrl: true } },
         receiver: { select: { id: true, name: true, avatarUrl: true } },
         offeredSkill: { select: { name: true } }, 
@@ -230,7 +275,7 @@ app.get("/api/swap-requests", authenticateToken, async (req, res) => {
   }
 });
 
-app.patch("/api/swap-requests/:id/status", authenticateToken, async (req, res) => {
+app.patch("/api/swap-requests/:id/status", authenticateToken, async (req: any, res: any) => {
   const id = req.params.id as string;
   const { newStatus } = req.body;
 
@@ -239,6 +284,12 @@ app.patch("/api/swap-requests/:id/status", authenticateToken, async (req, res) =
       where: { id },
       data: { status: newStatus },
     });
+
+    // ⚡ REAL-TIME EMIT: Notify both parties that request status changed
+    if (req.io) {
+      req.io.to(updatedRequest.requesterId).emit("swap_updated", { type: "STATUS_CHANGED" });
+      req.io.to(updatedRequest.receiverId).emit("swap_updated", { type: "STATUS_CHANGED" });
+    }
 
     if (newStatus === "ACCEPTED") {
       const relatedSwap = await prisma.swap.findFirst({
@@ -269,7 +320,6 @@ app.get("/api/swaps", authenticateToken, async (req, res) => {
     const swaps = await prisma.swap.findMany({
       where: { OR: [{ requesterId: userId }, { receiverId: userId }] },
       include: {
-        // ADDED AVATAR
         requester: { select: { id: true, name: true, avatarUrl: true } },
         receiver: { select: { id: true, name: true, avatarUrl: true } },
         offeredSkill: { select: { name: true } },
@@ -283,7 +333,6 @@ app.get("/api/swaps", authenticateToken, async (req, res) => {
   }
 });
 
-// Fetching avatarUrl and bio for the Swap Agreement Page
 app.get("/api/swaps/:id", authenticateToken, async (req, res: any) => {
   const swapId = req.params.id as string;
   const userId = (req as any).user?.id || (req as any).userId;
@@ -317,9 +366,9 @@ app.get("/api/swaps/:id", authenticateToken, async (req, res: any) => {
   }
 });
 
-app.post("/api/swaps/:id/log-session", authenticateToken, async (req, res) => {
+app.post("/api/swaps/:id/log-session", authenticateToken, async (req: any, res: any) => {
   const id = req.params.id as string;
-  const userId = (req as any).user?.id || (req as any).userId;
+  const userId = req.user?.id || req.userId;
 
   try {
     const swap = await prisma.swap.findUnique({ where: { id } });
@@ -339,6 +388,11 @@ app.post("/api/swaps/:id/log-session", authenticateToken, async (req, res) => {
         : { receiverSessions: currentCount + 1 }
     });
 
+    // ⚡ REAL-TIME EMIT: Update progress bar instantly for both peers
+    if (req.io) {
+      req.io.to(`swap_${id}`).emit("swap_progress_updated", updatedSwap);
+    }
+
     res.json(updatedSwap);
   } catch (error) {
     res.status(500).json({ error: "Failed to log verification session." });
@@ -346,7 +400,7 @@ app.post("/api/swaps/:id/log-session", authenticateToken, async (req, res) => {
 });
 
 // --- 5. FINALIZE AGREEMENT ---
-app.post("/api/swaps/:id/agreement", authenticateToken, async (req, res) => {
+app.post("/api/swaps/:id/agreement", authenticateToken, async (req: any, res: any) => {
   const id = req.params.id as string;
   const { sessions } = req.body;
 
@@ -359,6 +413,11 @@ app.post("/api/swaps/:id/agreement", authenticateToken, async (req, res) => {
       }
     });
 
+    // ⚡ REAL-TIME EMIT: Notify swap room of finalized agreement
+    if (req.io) {
+      req.io.to(`swap_${id}`).emit("swap_updated", { type: "AGREEMENT_CONFIRMED" });
+    }
+
     res.json({ 
       message: "Agreement finalized!", 
       swap: updatedSwap 
@@ -370,13 +429,12 @@ app.post("/api/swaps/:id/agreement", authenticateToken, async (req, res) => {
 });
 
 // --- 6. REPUTATION & BILATERAL FINALIZATION ---
-app.post("/api/reputation/submit", authenticateToken, async (req, res) => {
+app.post("/api/reputation/submit", authenticateToken, async (req: any, res: any) => {
   const { swapId, partnerId, rating, comment } = req.body;
-  const reviewerId = (req as any).user?.id || (req as any).userId;
+  const reviewerId = req.user?.id || req.userId;
 
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // 1. Log the individual review
       const newReview = await tx.review.create({
         data: {
           rating: Number(rating),
@@ -387,10 +445,8 @@ app.post("/api/reputation/submit", authenticateToken, async (req, res) => {
         }
       });
 
-      // 2. Count existing reviews for this specific swap
       const totalReviews = await tx.review.count({ where: { swapId } });
 
-      // 3. Mark completed ONLY if both peers have submitted evaluations
       if (totalReviews >= 2) {
         await tx.swap.update({ 
           where: { id: swapId }, 
@@ -400,6 +456,12 @@ app.post("/api/reputation/submit", authenticateToken, async (req, res) => {
       
       return newReview;
     });
+
+    // ⚡ REAL-TIME EMIT: Update swap room when review is logged
+    if (req.io) {
+      req.io.to(`swap_${swapId}`).emit("swap_updated", { type: "REVIEW_SUBMITTED" });
+    }
+
     res.json(result);
   } catch (error: any) {
     res.status(500).json({ error: error.message });
@@ -407,7 +469,7 @@ app.post("/api/reputation/submit", authenticateToken, async (req, res) => {
 });
 
 // --- 7. DELETION & CANCELLATION ---
-app.delete("/api/swaps/cancel/:type/:id", authenticateToken, async (req, res) => {
+app.delete("/api/swaps/cancel/:type/:id", authenticateToken, async (req: any, res: any) => {
   const type = req.params.type as string; 
   const id = req.params.id as string; 
 
@@ -437,14 +499,15 @@ app.use((err: any, req: any, res: any, next: any) => {
   res.status(500).send('Something broke!');
 });
 
-const server = app.listen(Number(PORT), '0.0.0.0', () => {
-  console.log(`Knoxite Server Live on Port ${PORT}`);
-
+// 6. LISTEN ON THE HTTP SERVER WRAPPER
+server.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`Knoxite Real-Time Server Live on Port ${PORT}`);
 });
-  server.on('error', (error: any) => {
+
+server.on('error', (error: any) => {
   if (error.code === 'EADDRINUSE') {
     console.error(`❌ Port ${PORT} is already in use. Try a different port!`);
   } else {
     console.error('❌ Server error:', error);
   }
-});
+});     

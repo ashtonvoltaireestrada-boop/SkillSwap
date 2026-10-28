@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/app/components/ui/avatar"
 import { Checkbox } from "@/app/components/ui/checkbox";
 import { ArrowLeft, Check, Loader2, Repeat } from "lucide-react";
 import { API_BASE_URL } from "@/config";
+import { socket } from "@/utils/socket"; // ⚡ Import Socket Client
 
 export default function SwapAgreementPage() {
   const navigate = useNavigate();
@@ -32,6 +33,29 @@ export default function SwapAgreementPage() {
   useEffect(() => {
     if (swapId) fetchSwapDetails();
   }, [swapId]);
+
+  // ⚡ REAL-TIME AGREEMENT & STATUS LISTENER
+  useEffect(() => {
+    if (!swapId) return;
+
+    // Connect to Socket.IO and join the swap room
+    socket.connect();
+    socket.emit("join_swap_room", swapId);
+
+    // Re-fetch details when partner updates or confirms the agreement
+    const handleSwapUpdate = (data: any) => {
+      fetchSwapDetails();
+      if (data?.type === "AGREEMENT_CONFIRMED") {
+        navigate(`/swap-details/${swapId}`);
+      }
+    };
+
+    socket.on("swap_updated", handleSwapUpdate);
+
+    return () => {
+      socket.off("swap_updated", handleSwapUpdate);
+    };
+  }, [swapId, navigate]);
 
   const fetchSwapDetails = async () => {
     setIsLoading(true);
@@ -82,6 +106,7 @@ export default function SwapAgreementPage() {
           typeof data.wantedSkill === "object"
             ? data.wantedSkill.name
             : data.wantedSkill || "Skill B",
+        sessions: data.sessions ? String(data.sessions) : prev.sessions,
       }));
     } catch (err: any) {
       setDebugError(`Network Error: ${err.message}`);
@@ -118,7 +143,7 @@ export default function SwapAgreementPage() {
       );
 
       if (response.ok) {
-        navigate("/dashboard");
+        navigate(`/swap-details/${swapId}`);
       } else {
         const errorData = await response.json();
         alert(`Failed to sign: ${errorData.message || "Unknown error"}`);
@@ -391,7 +416,7 @@ export default function SwapAgreementPage() {
             <CardContent className="pt-6 space-y-4">
               <div className="text-xs text-slate-700 dark:text-slate-300 space-y-3 bg-slate-50 dark:bg-slate-800/60 p-4 rounded-2xl border border-slate-200/70 dark:border-slate-800 max-h-48 overflow-y-auto leading-relaxed">
                 <p>
-                  <strong>1. Reliability:</strong> I will arrive at scheduled peer sessions promptly and prepared.
+                  1. <strong>Reliability:</strong> I will arrive at scheduled peer sessions promptly and prepared.
                 </p>
                 <p>
                   <strong>2. Reciprocity:</strong> I will provide authentic, high-quality instruction in exchange for learning.
