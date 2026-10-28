@@ -160,10 +160,10 @@ export default function DashboardPage() {
         setHasNewNotifications(hasPending);
       }
     } catch (error) {
-      console.error("Dashboard Sync Error:", error);
-    } fontinally {
-      setIsLoading(false);
-    }
+  console.error("Dashboard Sync Error:", error);
+} finally {
+  setIsLoading(false);
+}
   };
 
   const handleSignOut = () => {
