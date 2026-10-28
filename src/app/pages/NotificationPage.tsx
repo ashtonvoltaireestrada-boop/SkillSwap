@@ -76,35 +76,35 @@ export default function NotificationPage() {
   };
 
   const handleSwapAction = async (
-    swapId: string,
-    status: "ACCEPTED" | "REJECTED"
-  ) => {
-    setActionLoading(swapId);
-    try {
-      const token = localStorage.getItem("knoxite_token");
-      const res = await fetch(`${API_BASE_URL}/swap-requests/${swapId}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ newStatus: status }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (status === "ACCEPTED") {
-          navigate(`/swap-agreement/${data.redirectId || data.id}`);
-        } else {
-          fetchSwaps();
-        }
+  swapId: string,
+  status: "ACCEPTED" | "REJECTED"
+) => {
+  setActionLoading(swapId);
+  try {
+    const token = localStorage.getItem("knoxite_token");
+    const res = await fetch(`${API_BASE_URL}/swap-requests/${swapId}/status`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ newStatus: status }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      if (status === "ACCEPTED") {
+        // Redirect using activeSwapId created in backend transaction
+        navigate(`/swap-agreement/${data.activeSwapId || data.id}`);
+      } else {
+        fetchSwaps();
       }
-    } catch (err) {
-      console.error("Action Error:", err);
-    } finally {
-      setActionLoading(null);
     }
-  };
+  } catch (err) {
+    console.error("Action Error:", err);
+  } finally {
+    setActionLoading(null);
+  }
+};
 
   const handleCancelRequest = async (
     id: string,

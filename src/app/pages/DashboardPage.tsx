@@ -26,7 +26,7 @@ import {
   Sun,
 } from "lucide-react";
 import { API_BASE_URL } from "@/config";
-import { socket } from "@/utils/socket"; // ⚡ Import Socket Client
+import { socket } from "@/utils/socket";
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -41,7 +41,6 @@ export default function DashboardPage() {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const { startTour } = useOnboardingTour();
-
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const user = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
     return user.id ? localStorage.getItem(`theme_${user.id}`) === "dark" : false;
@@ -66,12 +65,10 @@ export default function DashboardPage() {
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
     
-    // Redirect admins to their dedicated dashboard
     if (user.role === "ADMIN") {
       navigate("/admin-dashboard", { replace: true });
       return;
     }
-
     setCurrentUserId(user.id);
     setCurrentUserName(user.name || "Student");
     setCurrentUserEmail(user.email || "student@knoxite.org");
@@ -82,19 +79,17 @@ export default function DashboardPage() {
     fetchDashboardData();
   }, [navigate]);
 
-  // ⚡ REAL-TIME DASHBOARD & NOTIFICATION LISTENER
+  // REAL-TIME DASHBOARD & NOTIFICATION LISTENER
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
     if (!user.id) return;
 
-    // Connect socket & join user's notification room
     socket.connect();
     socket.emit("join_user_room", user.id);
 
     const handleSwapUpdate = () => {
       fetchDashboardData();
     };
-
     const handleNewNotification = () => {
       setHasNewNotifications(true);
     };
@@ -111,12 +106,10 @@ export default function DashboardPage() {
   }, []);
 
   useEffect(() => {
-    // Only run the onboarding tour after the dashboard has finished loading data
     if (!isLoading) {
       const timer = setTimeout(() => {
         startTour();
       }, 400);
-
       return () => clearTimeout(timer);
     }
   }, [isLoading]);
@@ -141,16 +134,13 @@ export default function DashboardPage() {
         Authorization: `Bearer ${token}`,
         "bypass-tunnel-reminder": "true",
       };
-
       const [sRes, mRes, reqRes] = await Promise.all([
         fetch(`${API_BASE_URL}/swaps`, { headers }),
         fetch(`${API_BASE_URL}/matches`, { headers }),
         fetch(`${API_BASE_URL}/swap-requests`, { headers }),
       ]);
-
       if (sRes.ok) setSwaps(await sRes.json());
       if (mRes.ok) setMatches(await mRes.json());
-
       if (reqRes.ok) {
         const requests = await reqRes.json();
         const user = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
@@ -160,10 +150,10 @@ export default function DashboardPage() {
         setHasNewNotifications(hasPending);
       }
     } catch (error) {
-  console.error("Dashboard Sync Error:", error);
-} finally {
-  setIsLoading(false);
-}
+      console.error("Dashboard Sync Error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSignOut = () => {
@@ -194,7 +184,6 @@ export default function DashboardPage() {
           message: swapMessage,
         }),
       });
-
       if (response.ok) {
         setSuccessMessage(`Request sent to ${selectedMatch.name}!`);
         setTimeout(() => setSuccessMessage(""), 4000);
@@ -208,49 +197,41 @@ export default function DashboardPage() {
     }
   };
 
+  // ✅ STRICT ACTIVE SWAPS FILTER
   const activeRotations = swaps.filter((s) => {
-  // 1. Exclude unaccepted / pending requests (must be accepted first)
-  const isUnaccepted =
-    s.status === "PENDING" ||
-    s.status === "REQUESTED" ||
-    s.isAccepted === false ||
-    s.accepted === false;
+    // 1. Exclude unaccepted/pending requests
+    const isUnaccepted =
+      s.status === "PENDING" ||
+      s.status === "REQUESTED" ||
+      s.isAccepted === false ||
+      s.accepted === false;
+    if (isUnaccepted) return false;
 
-  if (isUnaccepted) return false;
+    // 2. Exclude inactive or cancelled swaps
+    const isInactiveStatus =
+      s.status === "COMPLETED" ||
+      s.status === "FINISHED" ||
+      s.status === "CANCELLED" ||
+      s.status === "REJECTED";
+    if (isInactiveStatus) return false;
 
-  // 2. Exclude completed, cancelled, or rejected swaps
-  const isInactiveStatus =
-    s.status === "COMPLETED" ||
-    s.status === "FINISHED" ||
-    s.status === "CANCELLED" ||
-    s.status === "REJECTED";
+    // 3. Exclude swaps where both parties have submitted reviews
+    const reviewCount = Array.isArray(s.reviews) ? s.reviews.length : 0;
+    if (reviewCount >= 2 || s.isCompleted === true) return false;
 
-  if (isInactiveStatus) return false;
-
-  // 3. Exclude swaps where both parties have completed their evaluations
-  const isBothEvaluated =
-    (s.requesterReviewed && s.receiverReviewed) ||
-    (s.requesterEvaluated && s.receiverEvaluated) ||
-    (s.requesterHasEvaluated && s.receiverHasEvaluated) ||
-    (Array.isArray(s.evaluations) && s.evaluations.length >= 2) ||
-    s.isCompleted === true;
-
-  if (isBothEvaluated) return false;
-
-  // 4. Keep only active swap statuses
-  return (
-    s.status === "CONFIRMED" ||
-    s.status === "PENDING_AGREEMENT" ||
-    s.status === "ACCEPTED" ||
-    s.status === "IN_PROGRESS"
-  );
-});
+    // 4. Retain active ongoing swap statuses
+    return (
+      s.status === "CONFIRMED" ||
+      s.status === "PENDING_AGREEMENT" ||
+      s.status === "ACCEPTED" ||
+      s.status === "IN_PROGRESS"
+    );
+  });
 
   const toggleDarkMode = () => {
     const user = JSON.parse(localStorage.getItem("knoxite_user") || "{}");
     const newMode = !isDarkMode;
     setIsDarkMode(newMode);
-
     if (newMode) {
       document.documentElement.classList.add("dark");
       if (user.id) localStorage.setItem(`theme_${user.id}`, "dark");
@@ -273,10 +254,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#E5F2FA] via-[#E5F2FA] via-70% to-[#F8FAFC] dark:bg-none dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans flex flex-col relative overflow-x-hidden transition-colors duration-200">
-      {/* SUBTLE ARCHITECTURAL GRID */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#e2e8f080_1px,transparent_1px),linear-gradient(to_bottom,#e2e8f080_1px,transparent_1px)] dark:bg-[linear-gradient(to_right,#1e293b50_1px,transparent_1px),linear-gradient(to_bottom,#1e293b50_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_70%_50%_at_50%_0%,#000_70%,transparent_110%)] pointer-events-none" />
-
-      {/* 1. FLOATING GLASS HEADER */}
+      
       <div className="sticky top-4 z-30 px-4 sm:px-6">
         <header className="max-w-7xl mx-auto flex items-center justify-between px-5 py-3 rounded-2xl bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border border-slate-200/80 dark:border-slate-800 shadow-xs">
           <div
@@ -292,14 +271,12 @@ export default function DashboardPage() {
               </span>
             </div>
           </div>
-
           <div className="flex items-center gap-2.5">
             {successMessage && (
               <Badge className="bg-emerald-600 text-white font-semibold px-3 py-1 rounded-lg mr-2">
                 {successMessage}
               </Badge>
             )}
-
             <div id="tour-nav-messages">
               <Button
                 variant="ghost"
@@ -311,7 +288,6 @@ export default function DashboardPage() {
                 <MessageSquare className="size-5" />
               </Button>
             </div>
-
             <div id="tour-nav-notifications">
               <Button
                 variant="ghost"
@@ -326,8 +302,6 @@ export default function DashboardPage() {
                 )}
               </Button>
             </div>
-
-            {/* PROFILE TRIGGER & DROPDOWN */}
             <div
               id="tour-nav-profile"
               ref={profileMenuRef}
@@ -349,7 +323,6 @@ export default function DashboardPage() {
                   <ChevronDown className="size-2.5 stroke-[3]" />
                 </span>
               </button>
-
               {isProfileMenuOpen && (
                 <div className="absolute right-0 mt-3 w-72 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-xl p-2.5 space-y-2 z-50 animate-in fade-in-50 zoom-in-95">
                   <div
@@ -377,7 +350,6 @@ export default function DashboardPage() {
                       </p>
                     </div>
                   </div>
-
                   <div className="space-y-1">
                     <button
                       type="button"
@@ -392,7 +364,6 @@ export default function DashboardPage() {
                       </div>
                       <span>Account Settings</span>
                     </button>
-
                     <button
                       type="button"
                       onClick={toggleDarkMode}
@@ -422,7 +393,6 @@ export default function DashboardPage() {
                         />
                       </div>
                     </button>
-
                     <button
                       type="button"
                       onClick={() => {
@@ -444,9 +414,7 @@ export default function DashboardPage() {
         </header>
       </div>
 
-      {/* 2. MAIN WORKSPACE CONTAINER */}
       <div className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 pt-8 pb-24 grid grid-cols-1 md:grid-cols-12 gap-8 relative z-10">
-        {/* LEFT SIDEBAR NAVIGATION */}
         <aside className="md:col-span-3 space-y-4">
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-5 shadow-xs">
             <nav className="flex flex-col gap-1.5">
@@ -458,7 +426,6 @@ export default function DashboardPage() {
                   KnoxHub
                 </button>
               </div>
-
               <div id="tour-my-skills">
                 <button
                   onClick={() => navigate("/my-skills")}
@@ -467,7 +434,6 @@ export default function DashboardPage() {
                   My Skills
                 </button>
               </div>
-
               <div id="tour-community-forum">
                 <button
                   onClick={() => navigate("/community-forum")}
@@ -476,7 +442,6 @@ export default function DashboardPage() {
                   Community Forum
                 </button>
               </div>
-
               <div id="tour-leaderboard">
                 <button
                   onClick={() => navigate("/leaderboard")}
@@ -489,9 +454,7 @@ export default function DashboardPage() {
           </div>
         </aside>
 
-        {/* MAIN FEED: ACTIVE SWAPS & COMPATIBLE MATCHES */}
         <main className="md:col-span-9 space-y-10">
-          {/* SECTION 1: ACTIVE BILATERAL SWAPS */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -508,7 +471,6 @@ export default function DashboardPage() {
                 View Pending Requests
               </Button>
             </div>
-
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {activeRotations.length === 0 ? (
                 <div className="col-span-full p-10 text-center rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/70 dark:bg-slate-900/50 space-y-2">
@@ -532,7 +494,6 @@ export default function DashboardPage() {
             </div>
           </section>
 
-          {/* SECTION 2: COMPATIBLE PEER MATCHES (SKILL RADAR) */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
@@ -549,7 +510,6 @@ export default function DashboardPage() {
                 Browse All on KnoxHub
               </Button>
             </div>
-
             {matches.length === 0 ? (
               <div className="p-10 text-center rounded-3xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/70 dark:bg-slate-900/50 space-y-3">
                 <p className="text-sm font-bold text-slate-700 dark:text-slate-300">
@@ -574,7 +534,6 @@ export default function DashboardPage() {
                     peer.offeredSkills?.[0]?.name || "Verified Skill";
                   const wantsSkill =
                     peer.wantedSkills?.[0]?.name || "Peer Exchange";
-
                   return (
                     <div
                       key={peer.id}
@@ -603,7 +562,6 @@ export default function DashboardPage() {
                           </div>
                         </div>
                       </div>
-
                       <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 flex items-center justify-between gap-2">
                         <div>
                           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block">
@@ -613,11 +571,9 @@ export default function DashboardPage() {
                             {teachesSkill}
                           </span>
                         </div>
-
                         <div className="bg-blue-600 text-white p-1.5 rounded-lg shadow-xs shrink-0">
                           <Repeat className="size-3" />
                         </div>
-
                         <div className="text-right">
                           <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 block">
                             Wants to Learn
@@ -627,7 +583,6 @@ export default function DashboardPage() {
                           </span>
                         </div>
                       </div>
-
                       <Button
                         onClick={() => setSelectedMatch(peer)}
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl text-xs h-10 shadow-xs transition-all"
@@ -643,7 +598,6 @@ export default function DashboardPage() {
         </main>
       </div>
 
-      {/* 3. CLEAN FOOTER */}
       <footer className="mt-auto bg-white dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 py-4 px-6 z-20">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-2">
@@ -658,7 +612,6 @@ export default function DashboardPage() {
         </div>
       </footer>
 
-      {/* 4. REQUEST SWAP DIALOG */}
       <Dialog
         open={!!selectedMatch}
         onOpenChange={(open) => !open && setSelectedMatch(null)}
@@ -676,7 +629,6 @@ export default function DashboardPage() {
               .
             </DialogDescription>
           </DialogHeader>
-
           {selectedMatch && (
             <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-800 flex items-center justify-between text-xs my-1">
               <div>
@@ -700,7 +652,6 @@ export default function DashboardPage() {
               </div>
             </div>
           )}
-
           <div className="space-y-2 py-1">
             <Label
               htmlFor="message"
@@ -715,7 +666,6 @@ export default function DashboardPage() {
               className="text-sm h-11 rounded-xl border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus-visible:ring-blue-600"
             />
           </div>
-
           <DialogFooter className="flex-row gap-2.5 pt-2">
             <Button
               variant="outline"
@@ -738,33 +688,37 @@ export default function DashboardPage() {
   );
 }
 
+// ✅ ROLE-AWARE CARD COMPONENT
 function ActiveSwapCard({ swap, currentUserId }: any) {
   const navigate = useNavigate();
   const isReq = swap.requesterId === currentUserId;
   const partner = isReq ? swap.receiver : swap.requester;
   const mySessions = isReq ? swap.requesterSessions : swap.receiverSessions;
   const totalSessions = swap.sessions || 1;
-
   const mySkill = isReq
     ? swap.requesterSkill?.name || swap.offeredSkill?.name || "My Skill"
     : swap.receiverSkill?.name || swap.wantedSkill?.name || "My Skill";
-
   const partnerSkill = isReq
     ? swap.receiverSkill?.name || swap.wantedSkill?.name || "Partner Skill"
     : swap.requesterSkill?.name || swap.offeredSkill?.name || "Partner Skill";
 
+  const handleCardClick = () => {
+    if (swap.status === "PENDING_AGREEMENT") {
+      if (isReq) {
+        alert("Your partner is currently finalizing the swap agreement terms.");
+        return;
+      }
+      navigate(`/swap-agreement/${swap.id}`);
+    } else {
+      navigate(`/swap-details/${swap.id}`);
+    }
+  };
+
   return (
     <div
-      onClick={() =>
-        navigate(
-          swap.status === "PENDING_AGREEMENT"
-            ? `/swap-agreement/${swap.id}`
-            : `/swap-details/${swap.id}`
-        )
-      }
+      onClick={handleCardClick}
       className="relative mt-3 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/90 dark:border-slate-800 p-5 pt-6 shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-500/50 transition-all cursor-pointer flex flex-col justify-between space-y-4 group"
     >
-      {/* PINNED RIM BADGE */}
       <div className="absolute -top-3.5 left-6 max-w-[calc(100%-3rem)] inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold shadow-2xs group-hover:border-blue-300 dark:group-hover:border-blue-500/50 transition-colors">
         <span className="text-blue-600 dark:text-blue-400 truncate">
           {mySkill}
@@ -777,7 +731,6 @@ function ActiveSwapCard({ swap, currentUserId }: any) {
         </span>
       </div>
 
-      {/* PARTNER ROW */}
       <div className="flex items-center gap-3.5 min-w-0">
         <Avatar className="size-11 rounded-xl ring-1 ring-slate-200 dark:ring-slate-700 shrink-0">
           <AvatarImage
@@ -795,12 +748,13 @@ function ActiveSwapCard({ swap, currentUserId }: any) {
             {partner?.name || "Partner"}
           </h4>
           <p className="text-xs text-slate-400 dark:text-slate-500 font-medium">
-            Click to open session workspace
+            {swap.status === "PENDING_AGREEMENT" && isReq
+              ? "Awaiting partner agreement setup"
+              : "Click to open session workspace"}
           </p>
         </div>
       </div>
 
-      {/* SEGMENTED PROGRESS SLICES */}
       <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/70 dark:border-slate-800 space-y-2.5">
         <div className="flex items-center justify-between text-xs">
           <span className="text-slate-500 dark:text-slate-400 font-medium">
@@ -810,7 +764,6 @@ function ActiveSwapCard({ swap, currentUserId }: any) {
             {mySessions || 0} / {totalSessions} Completed
           </span>
         </div>
-
         <div className="flex items-center gap-1.5 w-full">
           {Array.from({ length: totalSessions }).map((_, index) => {
             const isCompleted = index < (mySessions || 0);

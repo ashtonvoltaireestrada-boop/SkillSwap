@@ -16,12 +16,10 @@ export default function SwapAgreementPage() {
   const [step, setStep] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [debugError, setDebugError] = useState<string | null>(null);
-
   const [participants, setParticipants] = useState<any>({
     me: { name: "You", headline: "Student/Teacher", avatarUrl: "" },
     partner: { name: "Partner", headline: "Student/Teacher", avatarUrl: "" },
   });
-
   const [agreement, setAgreement] = useState({
     skillA: "",
     skillB: "",
@@ -37,11 +35,9 @@ export default function SwapAgreementPage() {
   // ⚡ REAL-TIME AGREEMENT & STATUS LISTENER
   useEffect(() => {
     if (!swapId) return;
-
     // Connect to Socket.IO and join the swap room
     socket.connect();
     socket.emit("join_swap_room", swapId);
-
     // Re-fetch details when partner updates or confirms the agreement
     const handleSwapUpdate = (data: any) => {
       fetchSwapDetails();
@@ -49,9 +45,7 @@ export default function SwapAgreementPage() {
         navigate(`/swap-details/${swapId}`);
       }
     };
-
     socket.on("swap_updated", handleSwapUpdate);
-
     return () => {
       socket.off("swap_updated", handleSwapUpdate);
     };
@@ -62,7 +56,6 @@ export default function SwapAgreementPage() {
     setDebugError(null);
     const token =
       localStorage.getItem("knoxite_token") || localStorage.getItem("token");
-
     try {
       const response = await fetch(`${API_BASE_URL}/swaps/${swapId}`, {
         method: "GET",
@@ -82,6 +75,26 @@ export default function SwapAgreementPage() {
       }
 
       const data = await response.json();
+
+      // 🔒 SECURITY & ACCESS CONTROL CHECKS
+      const currentUserStr =
+        localStorage.getItem("knoxite_user") || localStorage.getItem("user");
+      const currentUser = currentUserStr ? JSON.parse(currentUserStr) : {};
+
+      // 1. Prevent requester from filling terms meant for receiver
+      if (data.receiverId && data.receiverId !== currentUser.id) {
+        alert(
+          "Only the user who received this swap request can finalize the agreement terms."
+        );
+        navigate("/dashboard", { replace: true });
+        return;
+      }
+
+      // 2. If agreement is already finalized, redirect to workspace details
+      if (data.status && data.status !== "PENDING_AGREEMENT") {
+        navigate(`/swap-details/${swapId}`, { replace: true });
+        return;
+      }
 
       setParticipants({
         me: {
@@ -120,11 +133,9 @@ export default function SwapAgreementPage() {
       alert("Please agree to the Knoxite Oath first.");
       return;
     }
-
     try {
       const token =
         localStorage.getItem("knoxite_token") || localStorage.getItem("token");
-
       const response = await fetch(
         `${API_BASE_URL}/swaps/${swapId}/agreement`,
         {
@@ -141,7 +152,6 @@ export default function SwapAgreementPage() {
           }),
         }
       );
-
       if (response.ok) {
         navigate(`/swap-details/${swapId}`);
       } else {
@@ -182,9 +192,7 @@ export default function SwapAgreementPage() {
             >
               <ArrowLeft className="size-5" />
             </Button>
-
             <div className="h-5 w-[1px] bg-slate-200 dark:bg-slate-800 mx-0.5" />
-
             <div
               onClick={() => navigate("/dashboard")}
               className="flex items-center gap-2.5 cursor-pointer"
@@ -220,7 +228,6 @@ export default function SwapAgreementPage() {
             className="absolute left-10 top-1/2 -translate-y-1/2 h-0.5 bg-blue-600 transition-all duration-300 z-0"
             style={{ width: `${((step - 1) / 2) * 80}%` }}
           />
-
           {[
             { num: 1, label: "Parties" },
             { num: 2, label: "Logistics" },
@@ -228,7 +235,6 @@ export default function SwapAgreementPage() {
           ].map((s) => {
             const isCompleted = s.num < step;
             const isActive = s.num === step;
-
             return (
               <div key={s.num} className="relative z-10 flex flex-col items-center">
                 <div
@@ -244,7 +250,9 @@ export default function SwapAgreementPage() {
                 </div>
                 <span
                   className={`text-[10px] font-bold uppercase tracking-wider mt-1.5 ${
-                    isActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 dark:text-slate-500"
+                    isActive
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-slate-400 dark:text-slate-500"
                   }`}
                 >
                   {s.label}
@@ -281,7 +289,7 @@ export default function SwapAgreementPage() {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-blue-600 dark:text-blue-400 block">
-                    You (Initiator/Receiver)
+                    You (Receiver/Finalizer)
                   </span>
                   <p className="font-bold text-slate-900 dark:text-white text-sm truncate mt-0.5">
                     {participants.me.name}
@@ -314,7 +322,7 @@ export default function SwapAgreementPage() {
                 </Avatar>
                 <div className="min-w-0 flex-1">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 block">
-                    Peer Partner
+                    Peer Partner (Initiator)
                   </span>
                   <p className="font-bold text-slate-900 dark:text-white text-sm truncate mt-0.5">
                     {participants.partner.name}

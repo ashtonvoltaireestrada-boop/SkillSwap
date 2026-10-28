@@ -36,31 +36,30 @@ router.post("/request", authenticateToken, async (req: AuthRequest, res: any) =>
 });
 
 // ==========================================
-// 2. GET MY SWAPS (INCOMING & OUTGOING)
+// GET MY ACTIVE SWAPS
 // ==========================================
 router.get("/", authenticateToken, async (req: AuthRequest, res: any) => {
   try {
-    // Fetch all swaps using 'SwapRequest' and 'requesterId'
-    const mySwaps = await prisma.swapRequest.findMany({
+    const mySwaps = await prisma.swap.findMany({
       where: {
         OR: [
-          { requesterId: req.userId }, // Matched to your schema!
+          { requesterId: req.userId },
           { receiverId: req.userId }
         ]
       },
       include: {
-        requester: { select: { id: true, name: true, email: true } }, // Matched!
-        receiver: { select: { id: true, name: true, email: true } },
+        requester: { select: { id: true, name: true, email: true, bio: true, avatarUrl: true } },
+        receiver: { select: { id: true, name: true, email: true, bio: true, avatarUrl: true } },
         offeredSkill: true,
-        wantedSkill: true
+        wantedSkill: true,
+        reviews: true
       },
-      orderBy: { createdAt: "desc" } 
+      orderBy: { createdAt: "desc" }
     });
-
     res.status(200).json(mySwaps);
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: "Failed to fetch your swap requests." });
+    res.status(500).json({ error: "Failed to fetch active swaps." });
   }
 });
 
