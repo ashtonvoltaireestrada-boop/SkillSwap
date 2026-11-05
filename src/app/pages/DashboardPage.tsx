@@ -589,9 +589,7 @@ export default function DashboardPage() {
             </div>
             <span className="font-bold text-slate-800 dark:text-slate-200">Knoxite</span>
           </div>
-          <p className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
-            Developed by Bulawan, Estrada, Larona, Palma
-          </p>
+          {/*about us stuff*/}
         </div>
       </footer>
 

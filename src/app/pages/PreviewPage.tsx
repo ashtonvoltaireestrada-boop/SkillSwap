@@ -6,7 +6,6 @@ import { useEffect } from "react";
 export default function PreviewPage() {
   const navigate = useNavigate();
 
-
   useEffect(() => {
     document.documentElement.classList.remove("dark");
   }, []);
@@ -41,16 +40,16 @@ export default function PreviewPage() {
 
           <div className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
             <button
-              onClick={() => scrollToSection("ecosystem")}
-              className="hover:text-blue-600 transition-colors"
-            >
-              Ecosystem
-            </button>
-            <button
               onClick={() => scrollToSection("how-it-works")}
-              className="hover:text-blue-600 transition-colors"
+              className="hover:text-blue-600 transition-colors cursor-pointer"
             >
               How It Works
+            </button>
+            <button
+              onClick={() => scrollToSection("about-us")}
+              className="hover:text-blue-600 transition-colors cursor-pointer"
+            >
+              About Us
             </button>
           </div>
 
@@ -58,13 +57,12 @@ export default function PreviewPage() {
             <Button
               variant="ghost"
               onClick={() => navigate("/login")}
-              className="text-slate-700 hover:text-blue-600 font-semibold rounded-xl "
+              className="text-slate-700 hover:text-blue-600 font-semibold rounded-xl"
             >
               Log in
             </Button>
             <Button
               onClick={() => navigate("/signup")}
-              //className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl px-5 shadow-md shadow-blue-600/20"
               className="h-9 px-4 text-sm font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-sm shadow-blue-600/20 hover:-translate-y-0.5 active:scale-[0.98] transition-all"
             >
               Join Now
@@ -103,14 +101,13 @@ export default function PreviewPage() {
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/login")}
-                //className="h-14 px-7 text-base font-semibold bg-white hover:bg-slate-50 text-slate-700 border-slate-200 rounded-2xl"
                 className="h-14 px-7 text-base font-semibold bg-white hover:bg-slate-50 hover:border-slate-300 hover:shadow-md text-slate-700 border-slate-200 rounded-2xl hover:-translate-y-0.5 active:scale-[0.98] transition-all"
               >
                 Explore KnoxHub
               </Button>
             </div>
 
-            {/* Trust / Quick Metrics Bar */}
+            {/* Extra label */}
             <div className="pt-6 grid grid-cols-3 gap-6 max-w-lg">
               <div>
                 <p className="text-2xl font-black text-slate-900">1-on-1</p>
@@ -134,7 +131,6 @@ export default function PreviewPage() {
 
             {/* ==================== SWAP CARD 1: CHADWICK <-> ASHTON ==================== */}
             <div className="bg-white rounded-3xl border border-slate-200/90 shadow-lg shadow-slate-900/5 p-5 space-y-3 relative">
-              {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="size-2 rounded-full bg-emerald-500" />
@@ -216,7 +212,6 @@ export default function PreviewPage() {
 
             {/* ==================== SWAP CARD 2: JUSTINE <-> NEIL ==================== */}
             <div className="bg-white rounded-3xl border border-slate-200/90 shadow-lg shadow-slate-900/5 p-5 space-y-3 relative">
-              {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="size-2 rounded-full bg-emerald-500" />
@@ -307,94 +302,6 @@ export default function PreviewPage() {
       </header>
 
       {/* 4. BENTO GRID: CORE PLATFORM ECOSYSTEM */}
-      <section id="ecosystem" className="py-24 px-6 max-w-7xl mx-auto space-y-12">
-        <div className="max-w-2xl space-y-3">
-          <span className="text-xs font-bold uppercase tracking-widest text-blue-600">
-            Platform Architecture
-          </span>
-          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
-            Designed for real accountability, not passive video courses.
-          </h2>
-          <p className="text-slate-600 text-base leading-relaxed">
-            Every feature inside Knoxite is engineered to connect learners,
-            validate peer mentorship, and build a verifiable academic portfolio.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Card 1: KnoxHub */}
-          <div className="bg-white rounded-3xl border border-slate-200/90 p-8 shadow-xs flex flex-col justify-between space-y-6 hover:border-blue-300 transition-colors">
-            <div className="space-y-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100 inline-block">
-                Discovery Engine
-              </span>
-              <h3 className="text-2xl font-black text-slate-900">
-                KnoxHub Matchmaking Board
-              </h3>
-              <p className="text-slate-600 text-sm leading-relaxed">
-                Post the skill you need help with and what you can teach in return.
-                Filter by department, topic, or proficiency level to find a compatible peer in seconds.
-              </p>
-            </div>
-
-            {/* Mini Board Snippet */}
-            <div className="space-y-2.5 pt-2">
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-700">
-                    Offering: Java OOP
-                  </span>
-                  <span className="text-[11px] text-slate-400 font-medium">Active</span>
-                </div>
-                <p className="text-xs font-bold text-slate-800">
-                  Looking for a partner in Cisco Packet Tracer VLAN routing
-                </p>
-              </div>
-
-              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/70 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-700">
-                    Offering: Blender 3D
-                  </span>
-                  <span className="text-[11px] text-slate-400 font-medium">Active</span>
-                </div>
-                <p className="text-xs font-bold text-slate-800">
-                  Looking for a mentor in MySQL query optimization
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Bilateral Session Tracking */}
-          <div className="bg-slate-900 text-white rounded-3xl p-8 shadow-xs flex flex-col justify-between space-y-6">
-            <div className="space-y-3">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-blue-400 bg-blue-950 px-2.5 py-1 rounded-md border border-blue-800 inline-block">
-                Accountability
-              </span>
-              <h3 className="text-2xl font-black">
-                Bilateral Session Verification
-              </h3>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                Points and ratings are only awarded when both the mentor and apprentice
-                confirm session completion inside the dedicated workspace.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 space-y-3">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-slate-300 font-medium">Session Sign-off</span>
-                <span className="text-emerald-400 font-bold">2 / 2 Confirmed</span>
-              </div>
-              <div className="w-full bg-slate-700 h-2 rounded-full overflow-hidden">
-                <div className="bg-emerald-400 h-full w-full rounded-full" />
-              </div>
-              <p className="text-[11px] text-slate-400">
-                Unlocks peer rating & +150 Reputation Points upon mutual sign-off.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* 5. HOW IT WORKS (3-STEP WORKFLOW) */}
       <section id="how-it-works" className="py-20 px-6 bg-white border-y border-slate-200/80">
@@ -445,7 +352,82 @@ export default function PreviewPage() {
         </div>
       </section>
 
-      {/* 6. BOTTOM CTA BANNER */}
+      {/* 6. ABOUT US / MEET THE TEAM SECTION */}
+      <section id="about-us" className="py-24 px-6 max-w-7xl mx-auto space-y-12 scroll-mt-24">
+        <div className="text-center max-w-2xl mx-auto space-y-3">
+          <span className="text-xs font-bold uppercase tracking-widest text-blue-600">
+            About Us
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">
+            Meet the Knoxite Team
+          </h2>
+          <p className="text-slate-600 text-base leading-relaxed">
+            The computer science students behind the campus-exclusive peer-to-peer knowledge and skill swap platform.
+          </p>
+        </div>
+
+        {/* Team Grid Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            {
+              name: "Chadwick Jan Bulawan",
+              role: "UI/UX Designer & Frontend Developer",
+              initials: "CB",
+              image: "/team/bulawan.png",
+            },
+            {
+              name: "Ashton Voltaire Estrada",
+              role: "Full-Stack Developer",
+              initials: "AE",
+              image: "/team/estrada.png",
+            },
+            {
+              name: "Justine Josh Larona",
+              role: "Full-Stack Developer",
+              initials: "JL",
+              image: "/team/larona.png",
+            },
+            {
+              name: "Neil Patrick Palma",
+              role: "Systems & Security Analyst",
+              initials: "NP",
+              image: "/team/palma.png",
+            },
+          ].map((member, idx) => (
+            <div
+              key={idx}
+              className="bg-white rounded-3xl border border-slate-200/90 p-6 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex flex-col items-center text-center group"
+            >
+              {/* Circular Avatar / Photo Frame */}
+              <div className="size-32 rounded-full p-2 bg-gradient-to-b from-blue-100 to-blue-50 border border-blue-200/60 mb-4 group-hover:scale-105 transition-transform">
+                <div className="size-full rounded-full overflow-hidden bg-white flex items-center justify-center">
+                  <img
+                    src={member.image}
+                    alt={member.name}
+                    className="size-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLElement).style.display = "none";
+                    }}
+                  />
+                  <span className="text-2xl font-black text-blue-600">
+                    {member.initials}
+                  </span>
+                </div>
+              </div>
+
+              {/* Information */}
+              <h3 className="text-base font-bold text-slate-900">
+                {member.name}
+              </h3>
+              <p className="text-xs font-semibold text-blue-600 mt-1">
+                {member.role}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 7. BOTTOM CTA BANNER */}
       <section className="py-20 px-6 max-w-7xl mx-auto">
         <div className="rounded-3xl bg-slate-900 text-white p-10 md:p-16 text-center md:text-left flex flex-col md:flex-row items-center justify-between gap-8 shadow-xl">
           <div className="space-y-3 max-w-xl">
@@ -472,7 +454,7 @@ export default function PreviewPage() {
         </div>
       </section>
 
-      {/* 7. FOOTER */}
+      {/* 8. FOOTER */}
       <footer className="pb-12 px-6 max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500 border-t border-slate-200/70 pt-8">
         <div className="flex items-center gap-2">
           <div className="size-6 bg-blue-600 rounded-lg flex items-center justify-center text-white font-black text-xs">
@@ -483,6 +465,11 @@ export default function PreviewPage() {
         </div>
         <p>© {new Date().getFullYear()} Knoxite.</p>
       </footer>
+
+      {/* Website Version Display */}
+      <div className="fixed bottom-3 right-4 z-40 pointer-events-none select-none text-[11px] font-mono tracking-wider text-slate-400">
+        Knoxite v1.0
+      </div>
     </div>
   );
 }
